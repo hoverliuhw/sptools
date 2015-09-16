@@ -1,0 +1,24 @@
+#!/bin/sh
+
+CCR_INDEX=UK02
+#CCR_INDEX=3961
+CC_NUM_COUNTER="/tmp/CC_NUM_COUNTER"
+CC_NUM_FRM="/tmp/cc_num.frm"
+CEPEXEC="/sn/cr/cepexec"
+
+if [ ! -f $CC_NUM_COUNTER ] 
+then
+	echo "There is no $CC_NUM_COUNTER, please run ccri first!!!\n"
+	exit 1
+fi
+
+read CC_NUM <$CC_NUM_COUNTER
+echo "FORM=SPA_DIAMCL29B_7&CHG,index=\"$CCR_INDEX\",CCR_CC_Request_Number=\"$CC_NUM\",CHG!" > $CC_NUM_FRM
+
+$CEPEXEC RCV_TEXT "RCV:TEXT,SPA" < $CC_NUM_FRM
+$CEPEXEC SEND_TEXT "snd:text=\"CCR:$CCR_INDEX\",RK=\"diam_key\""
+echo -e "\nSend CCRu:$CCR_INDEX, cc_request_number = $CC_NUM\n"
+
+CC_NUM=`expr $CC_NUM + 1`
+#CC_NUM=$(($CC_NUM + 1))
+echo $CC_NUM > $CC_NUM_COUNTER

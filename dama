@@ -1,0 +1,99 @@
+#!/bin/sh
+
+#####################################################################
+# This script is used to decode AMA file, by short decode AMA command
+#
+# Usage: dama [ -m msisdn|-r result|-l label] <AMA file> [<dest decode file>]
+# 
+# Created on 2014/07/23
+# Updated on 2015/06/02
+# Liu Hongwei Hong_Wei.hl.Liu@alcatel-lucent.com
+#####################################################################
+
+ME=`basename $0`
+CONF="/u/ainet/hongwehl/bin/CONFIGURE"
+
+function usage {
+
+cat <<! 1>&2
+
+Usage:  dama [ -m msisdn|-r result|-l label] <AMA file> [<dest decode file>]
+
+!
+
+exit 1
+}
+
+function readvar {
+	for VAR in `cat $CONF`
+	do
+		eval $VAR
+	done
+}
+
+if [ $# = 0 ]
+then
+        usage
+fi
+
+readvar
+
+if [ ! -f $AMAFILTER ] || [ ! -f $DECODE_AMA ]
+then
+	echo "$AMAFILTER or $DECODE_AMA does not exist."
+	exit 1
+fi
+
+if [ ! -x $DECODE_AMA ]
+then
+	echo "$DECODE_AMA is NOT executable"
+	exit 1
+fi
+
+#VERSION=`$DECODE_AMA | grep SUREPAY |awk '{print $1}'`
+VERSION=`$DECODE_AMA | egrep "[ ]+v[0-9]+" | awk '{print $1}'`
+echo "ama version is $VERSION"
+
+while getopts :m:l:r: option
+do
+        case $option in
+        m)
+		DECODE_AMA="$DECODE_AMA -m $OPTARG"
+                ;;
+        l)
+		DECODE_AMA="$DECODE_AMA -l $OPTARG"
+                ;;
+        r)
+		DECODE_AMA="$DECODE_AMA -r $OPTARG"
+                ;;
+        \?)
+                echo "others, can't handle option $option" >&2
+                ;;
+        esac
+done
+
+shift `expr $OPTIND - 1`
+
+AMAFILE=$1
+DECODE_AMAFILE=$2
+
+if [ -z $AMAFILE ]
+then
+	usage
+fi
+
+if [ -z $DECODE_AMAFILE ]
+then
+	AMAFILENAME=`echo $AMAFILE | awk -F/ '{print $NF}'`
+        DECODE_AMAFILE=/tmp/$AMAFILENAME.decode
+fi
+
+# Get blocksize from billing.config file
+BS=`grep ^blocksize $BILLCONF | sed -e "s/blocksize=//g"`
+if [ $BS -le 32 ] && [ $BS -ge 2 ]
+then
+	BS=`expr $BS \* 1024`
+fi
+
+$DECODE_AMA $VERSION $AMAFILE $AMAFILTER $BS | sed "s/\t/ /g" |tee  $DECODE_AMAFILE
+echo "Decoded ama file is stored in $DECODE_AMAFILE"

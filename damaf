@@ -1,0 +1,61 @@
+#!/bin/sh
+
+#####################################################################
+# This script is used to decode AMA file, by short decode AMA command
+#
+# Usage: damaf <AMA file> [<dest decode file>]
+# 
+# Created on 2015/06/02
+# Liu Hongwei Hong_Wei.hl.Liu@alcatel-lucent.com
+#####################################################################
+
+ME=`basename $0`
+CONF="/u/ainet/hongwehl/bin/CONFIGURE"
+
+function usage {
+
+	cat <<! 1>&2
+
+Usage:  damaf <AMA file> [<dest decode file>]
+
+!
+
+	exit 1
+}
+
+function readvar {
+        for VAR in `cat $CONF`
+        do
+                eval $VAR
+        done
+}
+
+if [ $# = 0 ]
+then
+        usage
+fi
+
+AMAFILE=$1
+DECODE_AMAFILE=$2
+
+readvar
+
+FILTER_STR=""
+len=0
+
+if [ -f $AMAFIELD_FILTER ]
+then 
+	len=`awk 'END{print NR}' $AMAFIELD_FILTER`
+fi
+
+if [ $len -ne 0 ]
+then
+	FILTER_STR="Record Details"
+	while read fieldname
+        do
+        	FILTER_STR=$FILTER_STR"|^$fieldname\\s+:"
+        done < $AMAFIELD_FILTER
+fi
+
+SEP="----------------------"
+$DAMA $AMAFILE $DECODE_AMAFILE | sed "s/Record Details/$SEP> & <$SEP/g" | egrep "$FILTER_STR" 2>/dev/null

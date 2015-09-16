@@ -1,0 +1,8 @@
+trace:proc=EPPSA29C,mode=1178&1179,client=all,ucl
+trace:proc=EPPSA29C,mode=1088&1089&2634&2635,client=all,ucl
+trace:proc=EPPSA29C,mode=1178&1179,machine=0-0-1,ucl
+trace:proc=EPPSA29C,mode=1178&1179,machine=0-0-9,ucl
+debug:spa=EPPSA29C,client=all,source="/u/ainet/hongwehl/src/EPPSA29C.bp",ucl
+debug:spa=EPPSA29C,client=all,source="/u/ainet/hongwehl/src/client.bkpoint",ucl
+debug:spa=EPPSA29C,machine=0-0-1,source="/u/ainet/hongwehl/src/server.bkpoint",ucl
+debug:spa=EPPSA29C,machine=0-0-9,source="/u/ainet/hongwehl/src/server.bkpoint",ucl

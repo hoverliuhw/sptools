@@ -1,0 +1,40 @@
+#!/bin/ksh
+
+#Information about your workstation
+#HOST=135.252.173.249
+HOST=135.252.17.202
+LOGIN=hongwehl
+PASSWD=hongwehl
+LOGDIR=/l/hongwehl/BSNL/sp28.12/log/
+LOGNAME=debuglog
+
+#This fuction used to colloect log
+#If used in another workstation, need to chang path of LogCMB
+logCollect()
+{
+echo "*************** Collecting Log ***************"
+/u/ainet/hongwehl/bin/LogCMB $LOGNAME
+echo "*************** Uploading Log ***************"
+ftp -in $HOST <<!
+user $LOGIN $PASSWD
+bin
+cd $LOGDIR
+put $LOGNAME
+by
+!
+
+isSubscriptAt=`grep "subscript at" $LOGNAME`
+if [ ! -z "$isSubscriptAt" ]
+then
+	echo -e "\n\n\n\n"
+	echo -e  "\t####################################"
+	echo -e  "\t#                                  #"
+	echo -e  "\t#  WARNING: subscript at exists!!  #"
+	echo -e  "\t#                                  #"
+	echo -e  "\t####################################\n\n"
+fi
+
+}
+
+tailer deb|tee $LOGNAME
+trap 'logCollect' 0 1 2 3 15

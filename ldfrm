@@ -1,0 +1,24 @@
+#!/bin/sh
+
+FRMFILE=$1
+fulllink=`readlink -f $FRMFILE`
+FRMFILETMP=/tmp/FRMFILE.tmp
+cat $FRMFILE |sed -e "s/! /,/g" > $FRMFILETMP
+
+isFrmbk=`echo $FRMFILE | egrep '.frmbk'`
+if [ ! -z "$isFrmbk" ]
+then
+	#echo "$FRMFILE is a .frmbk file"
+	tac $FRMFILE |sed -e "s/! /,/g" > $FRMFILETMP
+fi
+
+echo -e "END;" >> $FRMFILETMP
+/cs/sn/cr/cepexec RCV_TEXT "RCV:TEXT,SPA" <$FRMFILETMP
+
+rm $FRMFILETMP
+#tracked=`psql -Uscncraft -At -c "select tablename from pg_tables where tablename='rcdata'"`
+#if [ ! -z $tracked ]
+#then
+#        echo "Clearing rcdata in PSQL"
+#       psql -Uscncraft -c "delete from rcdata"
+#fi

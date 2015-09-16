@@ -1,0 +1,132 @@
+#!/bin/sh
+#####################################################################
+# This script is used to decode AMA file, by short decode AMA command
+# and filtered ama fields you care about, it will be configured under
+# /u/ainet/amascripts/config/ama.fields, <EL_ER>.fields, eg. 46_1.fields
+# 
+# It is based on /u/ainet/amascripts/bin/dama
+#
+# Usage: edamaf <AMA file> [<dest decode file>]
+#
+# 2015/06/02
+# Liu Hongwei 
+# Hong_Wei.hl.Liu@alcatel-lucent.com
+#####################################################################
+
+ME=`basename $0`
+CONF="/u/ainet/hongwehl/bin/CONFIGURE"
+
+function usage {
+
+cat <<! 1>&2
+
+Usage:  edamaf <AMA file> [<dest decode file>]
+
+!
+
+exit 1
+}
+
+if [ $# = 0 ]
+then
+        usage
+fi
+
+function readvar {
+        for VAR in `cat $CONF`
+        do
+                eval $VAR
+        done
+}
+
+readvar
+
+AMAFILE=$1
+DECODE_AMAFILE=$2
+
+if [ ! -d $AMACONFIG_DIR ]
+then
+        mkdir -p $AMACONFIG_DIR
+fi
+
+if [ ! -f $AMAFIELD_FILTER ]
+then
+        cat <<!eof >"$AMAFIELD_FILTER"
+Account ID
+Provider ID Code
+Class Of Service Code
+Generation Timestamp
+Event Label
+Event Result
+Pre-Event Primary Balance
+Post-Event Primary Balance
+Initial tariff rate
+N Seconds Free
+Call Duration
+Call Cost
+Tariff Plan COSP AMA code
+!eof
+
+fi
+
+TEMP_DECODE_FILE=$DECODE_AMAFILE
+if [ -z $TEMP_DECODE_FILE ]
+then
+	AMAFILENAME=`echo $AMAFILE |awk -F/ '{print $NF}'`
+	TEMP_DECODE_FILE="/tmp/$AMAFILENAME.decode"
+fi
+
+$DAMA $AMAFILE $TEMP_DECODE_FILE >/dev/null 2>&1
+elerlist=`egrep "Event Label|Event Result" $TEMP_DECODE_FILE | sed "s/[^0-9]//g" | awk '{
+	if ( (NR % 2) == 1 ){
+		str = str$1"_";
+	}else{
+		str = str$1"\n";
+	}
+}
+END{
+	print str
+}'`
+
+echo "ama list in this amafile: " $elerlist
+
+SEP="-----------------------"
+MARK="Record Details"
+line_no=`grep -n "$MARK" $TEMP_DECODE_FILE |awk -F: '{print $1}'`
+len=`awk 'END{print NR}' $TEMP_DECODE_FILE`
+line_no="$line_no $len"
+
+INDEX=1
+for eler in $elerlist
+do
+	AMAFIELD_FILTER="$AMACONFIG_DIR/$eler.fields"
+
+	FILTER_STR=""
+	len=0
+
+	if [ ! -f $AMAFIELD_FILTER ]
+	then
+		AMAFIELD_FILTER="$AMACONFIG_DIR/ama.fields"
+	fi
+
+	if [ -f $AMAFIELD_FILTER ]
+	then 
+		len=`awk 'END{print NR}' $AMAFIELD_FILTER`
+	fi
+
+	if [ $len -ne 0 ]
+	then
+		FILTER_STR="Record Details"
+		while read fieldname
+		do
+       	 		FILTER_STR=$FILTER_STR"|^$fieldname\\s+:"
+        	done < $AMAFIELD_FILTER
+	fi
+
+	START=`echo $line_no | awk -v LINENO=$INDEX '{print $LINENO}'`
+        INDEX=$(($INDEX + 1))
+        END=`echo $line_no | awk -v LINENO=$INDEX '{print $LINENO}'`
+        END=$(($END - 1))
+	sed -n "$START,$END"p $TEMP_DECODE_FILE| sed "s/Record Details/$SEP> & of $eler <$SEP/g" |egrep "$FILTER_STR" 
+done
+

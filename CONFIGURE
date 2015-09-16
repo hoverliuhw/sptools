@@ -1,0 +1,16 @@
+HOST=135.252.17.202
+LOGIN=hongwehl
+PASSWD=hongwehl
+LOGDIR=/l/hongwehl/BSNL/sp28.12/log/
+LOGNAME=debuglog
+LOGCMB=LogCMB
+MSISDN=393400488418
+AMADIR=/billtemp
+AMAFILTER=/cs/sn/bill/ama.filter
+BILLCONF=/cs/sn/bill/billing.config
+DECODE_AMA=/u/ainet/hongwehl/bin/decode_ama
+AMACONFIG_DIR=/u/ainet/amascripts/config
+AMAFIELD_FILTER=$AMACONFIG_DIR/ama.fields
+AMADESTDIR=/u/ainet/amafile
+DAMA=/u/ainet/hongwehl/bin/dama
+TEMP_DECODE_FILE=/tmp/temp.decode

@@ -1,0 +1,9 @@
+#!/bin/sh
+# this script is to send CCRi, CCRu, CCRt in one command
+ni
+sleep 5
+
+nu
+sleep 5
+
+nt

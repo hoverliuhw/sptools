@@ -1,0 +1,165 @@
+#!/bin/ksh
+
+################################################################
+# This is updated teel, integrates decode ama tool
+#
+# Created on 2014/07/23
+# Updated on 2015/06/02, 
+#	add function to support going thru mid-night
+#	add function to filter ama fields by configure file
+# Liu Hongwei 
+# Hong_Wei.hl.Liu@alcatel-lucent.com
+################################################################
+
+#Information about your workstation
+CONF="/u/ainet/hongwehl/bin/CONFIGURE"
+
+for VAR in `cat $CONF`
+do
+	eval $VAR
+done
+
+if [ ! -d $AMADESTDIR ]
+then
+	mkdir -p $AMADESTDIR
+fi
+
+########################################
+# Get start date and time before call
+MON=`date |awk '{print $2}'`
+DAY=`date |awk '{print $3}'`
+STARTDATE=`printf "%3s%3s" $MON $DAY`
+STARTTIME=`date '+%H%M'`
+
+########################################
+# Start to tailer log
+tailer deb|tee $LOGNAME
+
+#logCollect
+echo "*************** Collecting Log ***************"
+$LOGCMB $LOGNAME
+echo "*************** Uploading Log ***************"
+ftp -in $HOST <<!
+user $LOGIN $PASSWD
+bin
+cd $LOGDIR
+put $LOGNAME
+bye
+!
+
+echo "*************** Upload Log to $HOST Completed ***************"
+
+#######################################
+# Waiting for temp ama file finished under /billtemp
+#######################################
+LASTAMATMP=`ls -1 /billtemp/_TEMP_* 2>/dev/null`
+if [ -f /billtemp/_TEMP_ ]
+then
+	echo "Waiting for AMA generated from $LASTAMATMP"
+	dot=0
+	while [ $dot -lt 1 ]
+	do
+		if [ -f $LASTAMATMP ]
+		then
+			sleep 5
+			echo -n "."
+		else
+			dot=$(($dot + 1))
+		fi
+	done
+	sleep 1
+fi
+echo "."
+
+#######################################
+# Get end date and time after call
+#########################################
+
+DAY=`date |awk '{print $3}'`
+ENDDATE=`printf "%3s%3s" $MON $DAY` 
+ENDTIME=`date '+%H%M'`
+TODAY=$ENDDATE
+#echo "startdate is $STARTDATE, end date is $ENDDATE"
+
+#######################################
+# Get latest ama file from /billtemp
+#######################################
+if [ "$STARTDATE" != "$ENDDATE" ]
+then
+	AMAFILES=`ls -ltrs $AMADIR| grep "$STARTDATE"| sed 's/://g'| awk -v STARTTIME=$STARTTIME -v ENDTIME=2359 '{if ( \$6 != 0 && \$9 >= STARTTIME && \$9 <= ENDTIME) {print \$10 }}'`" "
+	STARTTIME=0000
+fi
+
+AMAFILES=$AMAFILES`ls -ltrs $AMADIR| grep "$TODAY"| sed 's/://g'| awk -v STARTTIME=$STARTTIME -v ENDTIME=$ENDTIME '{if ( \$6 != 0 && \$9 >= STARTTIME && \$9 <= ENDTIME) {print \$10 }}'`
+
+
+if [ -z $AMAFILES ]
+then
+	exit 0
+fi
+
+DAMAFULL=`which $DAMA 2>/dev/null`
+if [ -z $DAMAFULL ] || [ ! -f $DAMAFULL ]
+then
+	echo "There is no decode ama tool as $DAMA"
+	exit 0
+fi
+
+if [ ! -x $DAMAFULL ]
+then
+	echo "$DAMAFULL is not executable"
+	exit 0
+fi
+
+#############################################
+#Get cared ama field  name from $AMAFIELDFILE
+#############################################
+FILTER_STR=""
+len=0
+echo "Decoding AMA $AMAFILES"
+
+if [ -f $AMAFIELD_FILTER ]
+then
+        len=`awk 'END{print NR}' $AMAFIELD_FILTER`
+fi
+
+if [ $len -ne 0 ]
+then
+	echo "Filter Fields are:"
+        FILTER_STR="Record Details"
+        while read fieldname
+        do
+		echo " * $fieldname"
+		FILTER_STR=$FILTER_STR"|^$fieldname\\s+:"
+        done < $AMAFIELD_FILTER
+fi
+
+##############################################
+# Decode AMA
+##############################################
+
+SEP="----------------------"
+for AMAFILE in $AMAFILES
+do
+	echo "*************** Process $AMADIR/$AMAFILE ***************"
+	cp $AMADIR/$AMAFILE $AMADESTDIR
+	if [ -z $FILTER_STR ]
+	then
+		$DAMA $AMADESTDIR/$AMAFILE $AMADESTDIR/$AMAFILE.decode | sed "s/Record Details/$SEP> & <$SEP/g"
+	else
+		$DAMA $AMADESTDIR/$AMAFILE $AMADESTDIR/$AMAFILE.decode | sed "s/Record Details/$SEP> & <$SEP/g" |egrep "$FILTER_STR"
+	fi
+
+# Upload amafiles to WS by ftp
+	ftp -in $HOST <<! >/dev/null
+	user $LOGIN $PASSWD
+	bin
+	lcd $AMADESTDIR
+	cd $LOGDIR
+	put $AMAFILE
+	put $AMAFILE.decode
+	bye
+!
+done
+
+echo "*************** Completed to upload ama file to $HOST ***************"

@@ -1,0 +1,63 @@
+#!/bin/sh
+
+if [ $# != 1 ]
+then
+	echo "Usage: rstspa <SPA NAME> "
+	exit 1
+fi
+
+spaname=$1
+isInstalled=`psql -Uscncraft -At -c "select span from spa_tbl where span='$spaname'"`
+if [ -z "$isInstalled" ]
+then
+	echo "SPA $spaname is NOT installed on this machine"
+	exit 1
+fi
+
+isIS=`psql -Uscncraft -At -c "select span from spm_tbl where span='$spaname'"`
+if [ ! -z "$isIS" ]
+then
+	echo "SPA $spaname is in IS state, abort it first ... "
+	/cs/sn/cr/cepexec ABORT_SPA "ABT:SPA=$spaname"
+	if [ $? != 0 ]
+	then
+		echo "abort SPA fail, exit!"
+		exit 1
+	fi
+fi
+
+echo "INSTALL PROC SPA $spaname ..."
+/cs/sn/cr/cepexec INSTALL_SPA "INSTALL:SPA=$spaname,PROC"
+if [ $? != 0 ]
+then
+	echo "install proc fail"
+	exit 1
+fi
+echo "INSTALL PROC SPA $spaname SUCCESS"
+
+/cs/sn/cr/cepexec RST_SPA "RST:SPA=$spaname"
+if [ $? != 0 ]
+then
+        echo "rst spa fail"
+        exit 1
+fi
+echo "RST SPA $spaname SUCCESS"
+
+bpfile="/u/ainet/hongwehl/src/$spaname.bp"
+if [ ! -f $bpfile ]
+then
+	echo "BP file $bpfile not exist, so NOT apply trace and BP"
+	exit 0
+fi
+
+traceTemplate="/u/ainet/hongwehl/bin/trbp.general"
+isAudit=`echo $spaname | grep EPPSA`
+if [ ! -z "$isAudit" ]
+then
+	traceTemplate="/u/ainet/hongwehl/bin/trbp.audit"
+fi
+
+trbpfile="/tmp/trbpfile.tmp"
+sed "s,SPANAME,$spaname,g" $traceTemplate > $trbpfile
+subshl -f $trbpfile
+#rm $trbpfile

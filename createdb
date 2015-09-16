@@ -1,0 +1,29 @@
+#!/bin/sh
+
+list=dblist
+CEPEXEC=/sn/cr/cepexec
+
+function Usage {
+	echo "usage: ./createdb <DBNAME>|all"
+	exit 1
+}
+
+if [ $# -eq 0 ]
+then
+	Usage
+fi
+
+if [ $1 = "all" ]
+then
+	for db in `psql -Uscncraft -At -c "select * from rtdb_app where db_name not in ('NDB', 'BDB', 'HLRV', 'HLRNV')"`
+	do
+        	echo -n "create db=$db ... "
+		$CEPEXEC CREAT_DB "CREATE:DB=$db"
+		echo -e "\tresult: $?"
+	done
+else
+	db=$1
+	echo  "create db=$db ... "
+	$CEPEXEC CREAT_DB "CREATE:DB=$db"
+	echo -e "\tresult: $?"
+fi
