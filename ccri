@@ -6,10 +6,10 @@ CC_NUM=1
 CC_NUM_COUNTER="/tmp/CC_NUM_COUNTER"
 BASEFRM="/u/ainet/hongwehl/bin/ps.frm"
 
-if [ -f $CC_NUM_COUNTER ]
-then
-	mv $CC_NUM_COUNTER $CC_NUM_COUNTER.old
-fi
+#if [ -f $CC_NUM_COUNTER ]
+#then
+#	mv $CC_NUM_COUNTER $CC_NUM_COUNTER.old
+#fi
 
 $CEPEXEC RCV_TEXT "RCV:TEXT,SPA" < $BASEFRM
 $CEPEXEC SEND_TEXT "snd:text=\"CCR:$CCR_INDEX\",RK=\"diam_key\""
