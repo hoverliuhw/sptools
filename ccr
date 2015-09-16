@@ -7,3 +7,5 @@ ccru
 sleep 5
 
 ccrt
+echo "sleep 5s after ccrt"
+sleep 5
