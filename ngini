@@ -5,12 +5,12 @@ CCR_INDEX=UK01
 CEPEXEC="/sn/cr/cepexec"
 BASEFRM="/u/ainet/hongwehl/bin/ngin.frm"
 CC_NUM=1
-CC_NUM_COUNTER="/tmp/CC_NUM_COUNTER"
+CC_NUM_COUNTER="/tmp/NGIN_CC_NUM_COUNTER"
 
-if [ -f $CC_NUM_COUNTER ]
-then
-	mv $CC_NUM_COUNTER $CC_NUM_COUNTER.old
-fi
+#if [ -f $CC_NUM_COUNTER ]
+#then
+#	mv $CC_NUM_COUNTER $CC_NUM_COUNTER.old
+#fi
 
 $CEPEXEC RCV_TEXT "RCV:TEXT,SPA" < $BASEFRM
 $CEPEXEC SEND_TEXT "snd:text=\"CCR:$CCR_INDEX\",RK=\"diam_key\""

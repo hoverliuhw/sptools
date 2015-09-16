@@ -3,7 +3,7 @@
 CCR_INDEX=UK01
 CEPEXEC="/sn/cr/cepexec"
 CC_NUM=1
-CC_NUM_COUNTER="/tmp/CC_NUM_COUNTER"
+CC_NUM_COUNTER="/tmp/PS_CC_NUM_COUNTER"
 BASEFRM="/u/ainet/hongwehl/bin/ps.frm"
 
 #if [ -f $CC_NUM_COUNTER ]

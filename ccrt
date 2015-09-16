@@ -1,8 +1,9 @@
 #!/bin/sh
 
 CCR_INDEX=UK03
-CC_NUM_COUNTER="/tmp/CC_NUM_COUNTER"
-CC_NUM_FRM="/tmp/cc_num.frm"
+CC_NUM_COUNTER="/tmp/PS_CC_NUM_COUNTER"
+CC_NUM_FRM="/tmp/ps_cc_num.frm"
+BASEFRM="/u/ainet/hongwehl/bin/ps.frm"
 CEPEXEC="/sn/cr/cepexec"
 
 if [ ! -f $CC_NUM_COUNTER ] 
@@ -10,6 +11,8 @@ then
 	echo "There is no $CC_NUM_COUNTER, please run ccri first!\n"
 	exit 1
 fi
+
+$CEPEXEC RCV_TEXT "RCV:TEXT,SPA" < $BASEFRM
 
 read CC_NUM <$CC_NUM_COUNTER
 
