@@ -1,4 +1,18 @@
 #!/bin/sh
+###########################################################
+# name: ngini
+# usage: ngini
+# description:
+#       this script is for user to send CCRi in terminal by 
+#       command, no need copy cep cmd to subshl
+#       before using this script, need:
+#       1) update CCR_INDEX to the CCRi index you are using
+#       2) update DIAMCL version and table name in ngin.frm
+#       3) update RK here to the rk you are using in DIAMCL
+#
+# author: Liu Hongwei
+#         hong_wei.hl.liu@alcatel-lucent.com
+###########################################################
 
 CCR_INDEX=UK01
 #CCR_INDEX=396

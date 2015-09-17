@@ -1,4 +1,21 @@
 #!/bin/sh
+###########################################################
+# name: ccru
+# usage: ccru
+# description:
+#       this script is for user to send CCRu in terminal by 
+#       command, no need copy cep cmd to subshl,
+#	no need insert extra record when send multiple CCRus, 
+#	just need run ccru as any times you need
+#
+#       before using this script, need:
+#       1) update CCR_INDEX to the CCRu index you are using
+#       2) update DIAMCL version, table name in ps.frm and here
+#       3) update RK to the rk you are using in DIAMCL
+#
+# author: Liu Hongwei
+#         hong_wei.hl.liu@alcatel-lucent.com
+###########################################################
 
 CCR_INDEX=UK02
 CC_NUM_COUNTER="/tmp/PS_CC_NUM_COUNTER"

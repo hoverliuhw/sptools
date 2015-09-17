@@ -1,4 +1,21 @@
 #!/bin/sh
+###########################################################
+# name: nginu
+# usage: nginu
+# description:
+#       this script is for user to send CCRu in terminal by 
+#       command, no need copy cep cmd to subshl,
+#       no need insert extra record when send multiple CCRus, 
+#       just need run nginu as any times you need
+#
+#       before using this script, need:
+#       1) update CCR_INDEX to the CCRu index you are using
+#       2) update DIAMCL version, table name in ngin.frm and here
+#       3) update RK to the rk you are using in DIAMCL
+#
+# author: Liu Hongwei
+#         hong_wei.hl.liu@alcatel-lucent.com
+###########################################################
 
 CCR_INDEX=UK02
 #CCR_INDEX=3961
