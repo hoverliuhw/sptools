@@ -1,0 +1,56 @@
+Under this directory are some scripts for work convinience
+here is description for them:
+
+* CONFIGURE
+	configuration file, in this file, there are some 
+	variables which are used by some other scripts, 
+	such as teel, teela, eteela, dama, and so on
+	in the future, there may be more variables to 
+	be added in.
+
+* ccre
+	ccre is for running diameter sms call, before using it, need some 
+	other configuration, see it by vi ccre
+
+* ccri
+* ccru
+* ccrt
+	ccri, ccru, ccrt are used together for running diameter ps call
+	before using them, need some other configuratin, see by vi ccri/u/t
+	
+* ccr
+	a script that puts ccri/ccru/ccrt together, 
+	for tester running diameter ps call in one command
+
+* ChangeDate.sh
+	a change date script, new date need to be update in this script by vi, then run it by root
+
+* createdb
+
+dama
+damaf
+edamaf
+eteela
+ldb.sh
+ldfrm
+lnccr.sh
+lncmd.sh
+LogCMB
+lsdb.sh
+lsdv.sh
+ngin
+ngin.frm
+ngini
+ngint
+nginu
+ps.frm
+rstama
+rstdb.sh
+rstspa
+sms.frm
+stopall.sh
+teel
+teela
+trbp.audit
+trbp.general
+updsql.sh
