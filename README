@@ -26,11 +26,18 @@ here is description for them:
 	a change date script, new date need to be update in this script by vi, then run it by root
 
 * createdb
+	create db, usage: createdb <db name>|all
 
-dama
-damaf
-edamaf
-eteela
+* dama
+* damaf
+* edamaf
+	decode ama script, based on official decode_ama, see detail by vi them
+
+* teel
+* teela
+* eteela
+	enhanced tailer tools, see detail by vi them
+
 ldb.sh
 ldfrm
 lnccr.sh
@@ -49,8 +56,6 @@ rstdb.sh
 rstspa
 sms.frm
 stopall.sh
-teel
-teela
 trbp.audit
 trbp.general
 updsql.sh
