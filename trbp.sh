@@ -1,4 +1,13 @@
 #!/bin/sh
+##############################################
+# name: trbp.sh
+# usage: trbp.sh <spa name>
+# description: a script to apply trace and bp
+#	before using, make sure /u/ainet/hongwehl/src/<spaname>.bp is up to date
+#
+# author: Liu Hongwei
+# 	  hong_wei.hl.liu@alcatel-lucent.com
+#############################################
 
 if [ $# != 1 ]
 then
