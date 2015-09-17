@@ -9,12 +9,14 @@ here is description for them:
 	be added in.
 
 * ccre
+* sms.frm
 	ccre is for running diameter sms call, before using it, need some 
 	other configuration, see it by vi ccre
 
 * ccri
 * ccru
 * ccrt
+* ps.frm
 	ccri, ccru, ccrt are used together for running diameter ps call
 	before using them, need some other configuratin, see by vi ccri/u/t
 	
@@ -38,7 +40,9 @@ here is description for them:
 * eteela
 	enhanced tailer tools, see detail by vi them
 
-ldb.sh
+* ldb.sh
+	load db script, usage: ldb.sh <DBNAME> <DBFILE>, DBFILE can be absolute path, or correlative path
+
 ldfrm
 lnccr.sh
 lncmd.sh
