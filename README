@@ -1,65 +1,98 @@
-Under this directory are some scripts for work convinience
-here is description for them:
-
-* CONFIGURE
-	configuration file, in this file, there are some 
-	variables which are used by some other scripts, 
-	such as teel, teela, eteela, dama, and so on
-	in the future, there may be more variables to 
-	be added in.
-
-* ccre
-* sms.frm
-	ccre is for running diameter sms call, before using it, need some 
-	other configuration, see it by vi ccre
-
-* ccri
-* ccru
-* ccrt
-* ps.frm
-	ccri, ccru, ccrt are used together for running diameter ps call
-	before using them, need some other configuratin, see by vi ccri/u/t
-	
-* ccr
-	a script that puts ccri/ccru/ccrt together, 
-	for tester running diameter ps call in one command
-
-* ChangeDate.sh
-	a change date script, new date need to be update in this script by vi, then run it by root
-
-* createdb
-	create db, usage: createdb <db name>|all
-
-* dama
-* damaf
-* edamaf
-	decode ama script, based on official decode_ama, see detail by vi them
-
-* teel
-* teela
-* eteela
-	enhanced tailer tools, see detail by vi them
-
-* ldb.sh
-	load db script, usage: ldb.sh <DBNAME> <DBFILE>, DBFILE can be absolute path, or correlative path
-
-ldfrm
-lnccr.sh
-lncmd.sh
-LogCMB
-lsdb.sh
-lsdv.sh
-ngin
-ngin.frm
-ngini
-ngint
-nginu
-ps.frm
-rstama
-rstdb.sh
-rstspa
-sms.frm
-stopall.sh
-trbp.audit
-trbp.general
-updsql.sh
+# Under this directory are some scripts for work convinience
+# here is description for them:
+# 
+# * CONFIGURE
+# 	configuration file, in this file, there are some 
+# 	variables which are used by some other scripts, 
+# 	such as teel, teela, eteela, dama, and so on
+# 	in the future, there may be more variables to 
+# 	be added in.
+# 
+# * ccre
+# * sms.frm
+# 	ccre is for running diameter sms call, before using it, need some 
+# 	other configuration, see it by vi ccre
+# 
+# * ccri
+# * ccru
+# * ccrt
+# * ps.frm
+# 	ccri, ccru, ccrt are used together for running diameter ps call
+# 	before using them, need some other configuratin, see by vi ccri/u/t
+# 	
+# * ccr
+# 	a script that puts ccri/ccru/ccrt together, 
+# 	for tester running diameter ps call in one command
+# 
+# * ngini
+# * nginu
+# * ngint
+# * ngin.frm
+# 	ngini, nginu, ngint are used together for running ngin call
+# 	before using them, need some other configuratin, see by vi ngini/u/t
+# 
+# * ngin
+# 	a script that puts ngini/nginu/ngint together, 
+# 	for tester running ngin call in one command
+# 
+# * ChangeDate.sh
+# 	a change date script, new date need to be update in this script by vi, then run it by root
+# 
+# * createdb
+# 	create db, usage: createdb <db name>|all
+# 
+# * dama
+# * damaf
+# * edamaf
+# 	decode ama script, based on official decode_ama, see detail by vi them
+# 
+# * teel
+# * teela
+# * eteela
+# 	enhanced tailer tools, see detail by vi them
+# 
+# * ldb.sh
+# 	load db script, usage: ldb.sh <DBNAME> <DBFILE>, 
+#	DBFILE can be absolute path, or correlative path
+# 
+# * ldfrm
+# 	load frm/frmbk file on mcas, usage ldfrm <frm|frmbk>, 
+#	note: frmbk is read in opposite order
+# 
+# * lnccr.sh
+# 	ln ccri/u/t, ngini/u/t to /usr/local/bin, so that these scripts can be run directly
+# 
+# * lncmd.sh
+# 	ln teel, LogCMB, trbp, rstspa, rstdb, ldb, ldfrm to /usr/local/bin, so that these scripts can be run directly
+# 
+# * LogCMB
+# 	a script to combine log, no update to it, copy here for convinience
+# 
+# * lsdb.sh
+# 	a script to list all installed RTDBs
+# 
+# * lsdv.sh
+# 	a script to list all configured dataviews, it is slow
+# 
+# * rstama
+# 	a script to restart all ama related procs after ama.filter updated or other configuration updated
+# 
+# * rstdb.sh
+# 	a script to restart all rtdb
+# 
+# * rstspa
+# 	a script to restart a SPA, if bp file exists for this SPA, it will apply trace and bp
+# 
+# * stopall.sh
+# 	a script to stop all IS SPAs
+# 
+# * trbp.sh
+# * trbp.audit
+# * trbp.general
+#	trbp.sh is a script to apply trace and bp for a SPA which is in IS state, usage is trbp.sh <SPA NAME>
+#	trbp.general and trbp.audit are used by trbp.sh
+#	trbp.general is trace template for all SPAs, 
+#	trbp.audit is specially for EPPSA SPA, because there are two extra bp files to load for audit
+#
+# * updsql.sh
+#	a simple script to update sql files downloaded from webdb, it will add file header, replace host name, it should be edited before use
