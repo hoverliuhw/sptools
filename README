@@ -99,3 +99,6 @@
 #
 # * updsql.sh
 #	a simple script to update sql files downloaded from webdb, it will add file header, replace host name, it should be edited before use
+#
+# * keygen
+#	generate msisdn number for a case tid, e.g. keygen dn1234

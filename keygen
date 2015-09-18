@@ -1,0 +1,50 @@
+#!/bin/bash
+# This script is used for generating simkey for automation based on tid
+# Usage: keygen.sh <tid>
+#
+# 2012/04/16
+# Liu Hongwei 
+
+function Usage {
+        cat << EOF 1>&2
+Usage: keygen.sh <tid>
+EOF
+
+exit 1
+}
+
+tid=$1
+if [ -z "$tid" ]
+then
+        echo "Error: Please enter tid number!"
+        Usage
+fi
+
+#tidlen=`echo $tid | awk '{print length}'`
+#if [ $tidlen -ne 6 ]
+if [ $(echo $tid | awk '{print length}') -ne 6 ]
+then
+        echo "Error: tidnum $tid length does not equal to 6"
+        Usage
+fi
+
+basekey="861000"
+a1=`echo $tid | cut -c 1 | od -An -N1 -td1`
+let "a1=a1-97"
+if [ $a1 -lt 10 ]
+then
+        a1="0$a1"
+fi
+
+a2=`echo $tid | cut -c 2 | od -An -N1 -td1`
+let "a2=a2-97"
+if [ $a2 -lt 10 ]
+then
+        a2="0$a2"
+fi
+
+a3=`echo $tid | cut -c 3-`
+
+msisdn="$basekey$a1$a2$a3"
+
+echo $msisdn
