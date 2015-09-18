@@ -12,6 +12,7 @@
 # * sms.frm
 # 	ccre is for running diameter sms call, before using it, need some 
 # 	other configuration, see it by vi ccre
+#	sms.frm is base frm file for sms call, it is loaded by ccre
 # 
 # * ccri
 # * ccru
@@ -19,6 +20,7 @@
 # * ps.frm
 # 	ccri, ccru, ccrt are used together for running diameter ps call
 # 	before using them, need some other configuratin, see by vi ccri/u/t
+#	ps.frm is base frm file for ps call, it is loaded by every ccr
 # 	
 # * ccr
 # 	a script that puts ccri/ccru/ccrt together, 
@@ -30,6 +32,7 @@
 # * ngin.frm
 # 	ngini, nginu, ngint are used together for running ngin call
 # 	before using them, need some other configuratin, see by vi ngini/u/t
+#	ngin.frm is base frm file for ngin call, it is loaded by every ccr
 # 
 # * ngin
 # 	a script that puts ngini/nginu/ngint together, 
