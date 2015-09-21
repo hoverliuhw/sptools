@@ -163,3 +163,13 @@ do
 done
 
 echo "*************** Completed to upload ama file to $HOST ***************"
+isSubscriptAt=`grep "subscript at" $LOGNAME`
+if [ ! -z "$isSubscriptAt" ]
+then
+        echo -e "\n\n\n\n"
+        echo -e  "\t####################################"
+        echo -e  "\t#                                  #"
+        echo -e  "\t#  WARNING: subscript at exists!!  #"
+        echo -e  "\t#                                  #"
+        echo -e  "\t####################################\n\n"
+fi
