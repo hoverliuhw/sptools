@@ -18,7 +18,7 @@ expect {
 		expect "*root-#"
 		send "ln -s /u/ainet/hongwehl/bin/rstdb.sh /usr/local/bin/rstdb\n"
 		expect "*root-#"
-		send "ln -s /u/ainet/hongwehl/bin/ldb.sh /usr/local/bin/ldb\n"
+		send "ln -s /u/ainet/hongwehl/bin/ldb /usr/local/bin/ldb\n"
 		expect "*root-#"
 		send "ln -s /u/ainet/hongwehl/bin/ldfrm /usr/local/bin/ldfrm\n"
 		expect "*root-#"
