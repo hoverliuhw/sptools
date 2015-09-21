@@ -1,6 +1,13 @@
 #!/bin/sh
-
+#
+# usage: ldb <dbname> <dbfile>
+#	dbfile can be absolute dir, or relative dir
 #DBNAME=SIMDB28C
+if [ $# = 0 ]
+then
+	echo "usage: ldb <dbname> <dbfile>"
+	exit 1
+fi
 DBNAME=$1
 CEPEXEC=/cs/sn/cr/cepexec
 DBFILE=$2

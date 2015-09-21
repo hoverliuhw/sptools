@@ -1,0 +1,116 @@
+#!/bin/sh
+######################################################
+# usage: gendb <caselist file>
+# before use, please update:
+#       dblistfile= 
+#       sourcedir= 
+#       destdir= 
+#       seedtid= 
+#
+# author: Liu Hongwei
+######################################################
+
+CEPEXEC=/sn/cr/cepexec
+
+dblistfile=/u/ainet/hongwehl/dbdata/rtdb.list
+sourcedir=/u/ainet/hongwehl/dbdata
+destdir=/u/ainet/hongwehl/dest
+seedtid=fk9010
+
+if [ $# = 0 ]
+then
+	echo "usage: gendb <caselist file>"
+	exit 1
+fi
+
+caselistfile=$1
+
+function isTidValid {
+	tid=$1
+
+	tidlen=`echo $tid | awk '{print length}'`
+	if [ $tidlen -ne 6 ]
+	then
+		echo "skip: invalid tid $tid, length exceeds 6"
+		return
+	fi
+	
+	isValid=`echo $tid | egrep "[a-z]{2}[0-9]{4}"`
+	if [ -z "$isValid" ]
+	then
+		echo "skip: invalid tid $tid, it should be 2 letters and 4 digits, such as dn1234"
+        	return
+	fi
+}
+
+function getSuffix {
+
+        tid=$1
+        a1=`echo $tid | cut -c 1 | od -An -N1 -td1`
+        let "a1=a1-97"
+        if [ $a1 -lt 10 ]
+        then
+                a1="0$a1"
+        fi
+
+        a2=`echo $tid | cut -c 2 | od -An -N1 -td1`
+        let "a2=a2-97"
+        if [ $a2 -lt 10 ]
+        then
+                a2="0$a2"
+        fi
+
+        a3=`echo $tid | cut -c 3-`
+
+        echo $a1$a2$a3
+}
+
+seedsuffix=`getSuffix $seedtid`
+
+if [ -f $dblistfile ]
+then
+        dblist=`cat $dblistfile`
+else
+        dblist=`psql -Uscncraft -At -c "select * from rtdb_app where db_name not in ('NDB', 'BDB', 'HLRV', 'HLRNV')"`
+fi
+
+if [ ! -d $sourcedir ]
+then
+	echo "source db file dir doesn't exist, exit"
+	exit 1
+fi
+
+if [ ! -d $destdir ]
+then
+	mkdir -p $destdir
+fi
+
+for tid in `cat $caselistfile`
+do
+	needSkip=`echo $tid | egrep "^#"`
+        if [ ! -z "$needSkip" ]
+        then
+		continue
+        fi
+	needSkip=`isTidValid $tid`
+	if [ ! -z "$needSkip" ]
+	then
+		echo $needSkip
+		continue
+	fi
+	echo processing $tid
+	suffix=`getSuffix $tid`
+
+	for db in $dblist
+	do
+		sourcefile=$sourcedir/$seedtid.$db
+		destfile=$destdir/$tid.$db
+		if [ -f $sourcefile ]
+		then
+			echo -e "\tgenerating $tid.$db"
+			sed "s,$seedsuffix,$suffix,g" $sourcefile > $destfile
+		fi
+	done
+done
+
+echo -e "\nfinished, all rtdb files are stored under $destdir"

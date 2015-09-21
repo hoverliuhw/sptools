@@ -1,0 +1,74 @@
+#!/bin/sh
+######################################################
+# usage: bkdb <caselist file>
+# before use, please update:
+#       dblistfile= 
+#       destdir= 
+#
+# author: Liu Hongwei
+######################################################
+
+destdir=/u/ainet/hongwehl/dest
+dblistfile=/u/ainet/hongwehl/dbdata/rtdb.list
+
+if [ $# = 0 ]
+then
+	echo "usage: bkdb <tid>"
+	exit 1
+fi
+
+tid=$1
+tidlen=`echo $tid | awk '{print length}'`
+if [ $tidlen -ne 6 ]
+then
+        echo "tid $tid length does not equal to 6, exit"
+	exit 1
+fi
+
+isValid=`echo $tid | egrep "[a-z]{2}[0-9]{4}"`
+if [ -z $isValid ]
+then
+        echo "tid $tid is invalid, exit"
+	exit 1
+fi
+
+a1=`echo $tid | cut -c 1 | od -An -N1 -td1`
+let "a1=a1-97"
+if [ $a1 -lt 10 ]
+then
+        a1="0$a1"
+fi
+
+a2=`echo $tid | cut -c 2 | od -An -N1 -td1`
+let "a2=a2-97"
+if [ $a2 -lt 10 ]
+then
+        a2="0$a2"
+fi
+
+a3=`echo $tid | cut -c 3-`
+suffix=$a1$a2$a3
+
+if [ -f $dblistfile ]
+then
+        dblist=`cat $dblistfile`
+else
+        dblist=`psql -Uscncraft -At -c "select * from rtdb_app where db_name not in ('NDB', 'BDB', 'HLRV', 'HLRNV')"`
+fi
+
+if [ ! -d $destdir ]
+then
+	echo "destination dir $destdir doesn't exist, create it."
+	mkdir -p $destdir
+fi
+
+for db in $dblist
+do
+	echo "backup $db"
+	tmpfile=/tmp/$tid.$db
+	destfile=$destdir/$tid.$db
+	/sn/cr/cepexec BACKUP_DB "BACKUP:DB=$db,DEST=\"$tmpfile\""
+	sed -n "1,2p" $tmpfile > $destfile
+	sed -n "/$suffix/p" $tmpfile >> $destfile
+	#rm -rf $tmpfile
+done
