@@ -102,3 +102,13 @@
 #
 # * keygen
 #	generate msisdn number for a case tid, e.g. keygen dn1234
+# 
+# * ldcase
+# 	load RTDB files per case, usage: ldcase <tid>, 
+# 	note: request from Wang Yiping
+# * bkdb
+# 	backup RTDB file per case, usage: bkdb <tid>
+# 	note: request from Wang Yiping
+# * gendb
+# 	generate RTDB files for a caselist, usage: gendb <caselist file>
+# 	note: request from Wang Yiping
