@@ -33,9 +33,10 @@ fi
 cd `dirname $1`
 log=`basename $1`
 
-while grep $KEYWORD $log >/dev/null 2>&1
+tmploglist=`grep $KEYWORD $log | awk -F\' '{print $2}'`
+
+for logloc in $tmploglist
 do
-    logloc=`grep $KEYWORD $log | head -n 1 |awk -F\' '{print $2}'`
     logname=`basename $logloc`
     blade=`echo $logloc |awk -F\. '{print $3}'`
 
@@ -59,9 +60,15 @@ do
     #    expect eof" >/dev/null
 
     # restore the tmp log to the original location
-    gawk 'BEGIN{RS="\n\001\n"; ORS="\n\001\n"} '"/${logname}/"'{while (getline d <"/tmp/'"${logname}"'") print d} '"!/${logname}/"'{print}' $log >$log.tmp
-    mv $log.tmp $log
-    rm /tmp/${logname}
+    if [ -f "/tmp/${logname}" ]
+    then
+    	gawk 'BEGIN{RS="\n\001\n"; ORS="\n\001\n"} '"/${logname}/"'{while (getline d <"/tmp/'"${logname}"'") print d} '"!/${logname}/"'{print}' $log >$log.tmp
+    	mv $log.tmp $log
+    	rm /tmp/${logname}
+    else
+	echo "$logname does not exist!"
+	sed -i "1itmp log $logname does not exist!" $log
+    fi
 done
 
 echo "Done!!"
