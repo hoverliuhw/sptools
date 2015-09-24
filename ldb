@@ -2,18 +2,39 @@
 #
 # usage: ldb <dbname> <dbfile>
 #	dbfile can be absolute dir, or relative dir
-#DBNAME=SIMDB28C
+# 
+# description: 
+#	load db file based on dbname and db file
+# 
+# history:
+#	2015/09/24
+# author:
+#	Liu Hongwei
+
 if [ $# = 0 ]
 then
 	echo "usage: ldb <dbname> <dbfile>"
 	exit 1
 fi
+
 DBNAME=$1
 CEPEXEC=/cs/sn/cr/cepexec
 DBFILE=$2
 
 DBFILE=`readlink -f $DBFILE`
 #echo DBFILE is $DBFILE 
+isInstalled=`psql -Uscncraft -At -c "select * from rtdb_app where db_name='$DBNAME'"`
+if [ -z $isInstalled ]
+then
+	echo "RTDB $DBNAME is not installed"
+	exit 1
+fi
+
+if [ ! -f $DBFILE ]
+then
+	echo "db file $DBFILE does not exist"
+	exit 1
+fi
 
 CMD="LOAD:DB=$DBNAME,FILE=$DBFILE,UCL"
 eval $CEPEXEC LOAD_DB \'LOAD:DB=$DBNAME,FILE=\"$DBFILE\",UCL\'
