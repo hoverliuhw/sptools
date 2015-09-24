@@ -112,3 +112,6 @@
 # * gendb
 # 	generate RTDB files for a caselist, usage: gendb <caselist file>
 # 	note: request from Wang Yiping
+# * gdiamfrm
+#	generate ps.frm, sms.frm, ngin.frm, and update ccru, ccrt, nginu, ngint
+#	usage: gdiamfrm <DIAMCL NAME>
