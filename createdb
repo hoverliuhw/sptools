@@ -1,6 +1,11 @@
 #!/bin/sh
+#	name: createdb
+#	usage: ./createdb <DBNAME> | all
+#	author:
+#		Liu Hongwei
+#		hong_wei.hl.liu@alcatel-lucent.com
+#	
 
-list=dblist
 CEPEXEC=/sn/cr/cepexec
 
 function Usage {
@@ -15,12 +20,18 @@ fi
 
 if [ $1 = "all" ]
 then
+	createdb=$0
 	for db in `psql -Uscncraft -At -c "select * from rtdb_app where db_name not in ('NDB', 'BDB', 'HLRV', 'HLRNV')"`
 	do
-        	echo -n "create db=$db ... "
-		$CEPEXEC CREAT_DB "CREATE:DB=$db"
-		echo -e "\tresult: $?"
+		$createdb $db &
 	done
+
+        isfinished=`ps -ef | grep "CREATE : DB" | grep -v grep`
+        while [ ! -z "$isfinished" ]
+        do
+		sleep 1
+                isfinished=`ps -ef | grep "CREATE : DB" | grep -v grep`
+        done
 else
 	db=$1
 	echo  "create db=$db ... "
