@@ -2,7 +2,8 @@
 
 FRMFILE=$1
 fulllink=`readlink -f $FRMFILE`
-FRMFILETMP=/tmp/FRMFILE.tmp
+FILENAME=`basename $FRMFILE`
+FRMFILETMP=/tmp/$FILENAME.tmp
 cat $FRMFILE |sed -e "s/! /,/g" > $FRMFILETMP
 
 isFrmbk=`echo $FRMFILE | egrep '.frmbk'`
