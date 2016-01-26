@@ -1,8 +1,3 @@
-trace:proc=SPANAME,mode=1088&1089&1109,client=all,ucl
-trace:proc=SPANAME,mode=1134&1148&1149&1160&1161&1163&1164&1167&1168,client=all,ucl
-trace:proc=SPANAME,mode=1257&1258&2574&2576,client=all,ucl
-trace:proc=SPANAME,mode=2624&2625&2626&2631&2632&2633&2634&2635&2638&2639&2650,client=all,ucl
-trace:proc=SPANAME,mode=4033&4034,client=all,ucl
 trace:proc=SPANAME,mode=1178&1179,machine=0-0-1,ucl
 trace:proc=SPANAME,mode=1178&1179,machine=0-0-9,ucl
 trace:proc=SPANAME,mode=1178&1179,client=all,ucl
