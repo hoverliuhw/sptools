@@ -117,3 +117,12 @@
 #	usage: gdiamfrm <DIAMCL NAME>
 # * S7SCH_flags
 #	full trace mode list of S7SCH, put this file under /sn/cr/tracedir, then restart S7SCH, trace modes in this list will be applied
+#
+# * getdb.py
+#	used for getting RTDB data from log, then load it to RTDB
+#	usage: getdb.py  <logfile> <EPAY src file> <rtdb_type digit>
+#
+# * cpdgvx
+#	used for copy dg and vortex rule from automation dir to mcas
+# 	usage: cp this script to mcas, modify its dir and host ip, run it
+#

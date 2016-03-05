@@ -1,0 +1,71 @@
+#!/bin/sh
+# This script is for copying vortex rules and dg file from base dir to destion machine
+# before used that
+# please update version, remotebase and host information
+
+version="29C"
+remotebase=/home/ainet/hongwehl/automation/R29SUC
+remoteip=135.242.106.115
+remoteuser=ainet
+remotepasswd=ainet1
+
+rootpasswd="r00t"
+
+function cpfile {
+	opt=$1
+	source=$2
+	dest=$3
+	/usr/bin/expect -c "
+		spawn scp $opt $source $dest
+		expect {
+			"*assword:" {
+				send \"$remotepasswd\n\"
+				expect \"yes/no\"
+				send \"yes\n\"
+				exp_continue
+			}
+			}
+	" 2>/dev/null
+	echo
+}
+
+function syncdir {
+	dir=$1
+	username=`whoami`
+	if [ $username = "root" ]
+	then
+	        /opt/config/bin/PlatformSync all $dir
+	else
+	        /usr/bin/expect -c "
+	                spawn su -
+	                expect {
+	                "*assword:" {
+	                        send \"$rootpasswd\n\"
+	                        expect \"*root-#\"
+	                        send \"/opt/config/bin/PlatformSync all $dir\n\"
+	                        expect \"*root-#\"
+	                }
+	        }
+	        "
+	        echo
+	fi
+}
+
+for spa in EPAY EPPSA ECTRL
+do
+	localdir=/sn/sps/$spa$version/dg/global.dg/Customer_DGs
+	remotedir="$remoteuser@$remoteip:$remotebase/\*/\*/dg/$spa/\*"
+	cpfile -r $remotedir $localdir
+	syncdir $localdir
+done
+
+localdir=/sn/sps/EPAY/rules/domain/EPAY
+remotedir="$remoteuser@$remoteip:$remotebase/\*/\*/rules/\*/\*.rules"
+opt=" "
+cpfile $opt $remotedir $localdir
+syncdir /sn/sps/EPAY/rules
+/sn/vx/bin/register_domain EPAY
+for rule in `ls $localdir/*.rules`
+do
+	/sn/vx/bin/ruleseditor -syncvre -u $rule
+done
