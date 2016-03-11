@@ -2,13 +2,7 @@
 
 # this script is to get RTDB data from log, then load it to RTDB
 #
-#
-# usage: 
-#	put getdb.py to mCAS host with log and EPAY src file, 
-#	make sure this RTDB is installed, then:
-#
-#	getdb.py  <logfile> <EPAY src file> <rtdb_type digit>
-#
+# usage: getdb.py  <logfile> <EPAY src file> <rtdb_type digit>
 # supported rtdb_type:
 #		0 - SIM_RTDB
 #	 	1 - AI_RTDB
@@ -29,14 +23,13 @@ def usage():
 		0 - SIM_RTDB
 	 	1 - AI_RTDB
 		2 - Counter_RTDB
-	note: RTDB must be installed on this mCAS
 	e.g. getdb.py debuglog EPAY29H.src 0 
 	''')
 	sys.exit(1)
 
 # generate a map rcv and value
 def get_data_hash(single_data_str):
-        global src_rcv
+	global src_rcv
 	rcv_value = dict()
 	for line in single_data_str.split(','):
 		index = line.find('=')
@@ -70,12 +63,12 @@ def gen_dbrec(rcv_value):
 	return data_str
 
 def write_datafile(datafile, data_str):
-        if os.path.exists(datafile) == False:
-                return False
-        dhandler = open(datafile, 'a')
-        dhandler.write(data_str + '\n')
-        dhandler.close()
-        return True
+	if os.path.exists(datafile) == False:
+		return False
+	dhandler = open(datafile, 'a')
+	dhandler.write(data_str + '\n')
+	dhandler.close()
+	return True
 
 if len(sys.argv) < 4:
 	usage()
@@ -90,6 +83,7 @@ if sys.argv[3].isdigit:
 	index = int(sys.argv[3])
 if sys.argv[3].isdigit() == False or index < 0 or index >= len(rtdb_type_list):
 	usage()
+
 rtdb_type = rtdb_type_list[index]
 
 field_type_quote = ['Billing_Day_Type',
@@ -118,6 +112,9 @@ field_type_no_quote = ['Active_Recharge_Event_Type',
 
 # get db name from EPAY src
 db_name_line = ''
+db_def = ''
+db_read = ''
+
 if rtdb_type == 'SIM_RTDB':
 	db_name_line = 'set Glb_SIM_Table = "SIMDB'
 elif rtdb_type == 'AI_RTDB':
@@ -131,22 +128,33 @@ else:
 db_def = rtdb_type + '    table record {'
 db_read = rtdb_type + '!read_completed('
 
+srcname = os.path.basename(srcfile)
+if srcname.startswith('EPPSA'):
+	if rtdb_type == 'SIM_RTDB':
+		db_read = rtdb_type + '!get_next_completed('
+	elif rtdb_type == 'AI_RTDB':
+		db_read = rtdb_type + '!get_next_completed('
+		db_name_line = 'set Glb_AI_Table = "AIRTDB'
+	else:
+		pass
+
 src_handler = open(srcfile, 'r')
+
 for line in src_handler.readlines():
 	line = line.strip()
 	if line.startswith(db_name_line):
 		break
 src_handler.close()
 
-list = line.split('"')
-db_name = list[1]
-datafile = db_name + '_LOG.data'
+tmp_list = line.split('"')
+db_name = tmp_list[1]
+datafile = db_name + '.data'
 
 # get field list in rcv menu
 rcvfields = []
 rcvfile = '/cs/sn/rdb/' + db_name + '.ti'
 if os.path.exists(rcvfile) == False:
-	print(db_name + 'is not installed on this machine')
+	print(db_name + ' is not installed on this machine')
 	sys.exit(1)
 
 rcv_handler = open(rcvfile, 'r')
@@ -166,9 +174,9 @@ src_handler = open(srcfile, 'r')
 
 for line in src_handler.readlines():
 	if line.find(db_def) >= 0:
-                find_flag = True
-                continue
-        if find_flag == True:
+		find_flag = True
+		continue
+	if find_flag == True:
 		line = line.strip()
 		if not line or line.startswith('#'):
 			continue
@@ -217,14 +225,15 @@ while start > 0:
 	start = data_str.find('(', start) + 1
 	end = data_str.find(')', start)
 	single_data_str = data_str[start: end]
-	rcv_value = get_data_hash(single_data_str)
 
+	rcv_value = get_data_hash(single_data_str)
 	db_key = rcv_value[rcvfields[0]]
 	if db_key not in found_keys:
-                data_record = gen_dbrec(rcv_value)
-                write_datafile(datafile, data_record)
-                found_keys.append(db_key)
+		data_record = gen_dbrec(rcv_value)
+		write_datafile(datafile, data_record)
+		found_keys.append(db_key)
 	
 	start = data_str.find(db_read, end)
 
 print(db_name + ' data is stored into ' + datafile)
+
