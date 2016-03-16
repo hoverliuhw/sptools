@@ -22,7 +22,7 @@ expect {
 		send "ln -s /u/ainet/hongwehl/bin/LogCMB /usr/local/bin/LogCMB\n"
 		expect "*root-#"
 
-		send "ln -s /u/ainet/hongwehl/bin/trbp.sh /usr/local/bin/trbp\n"
+		send "ln -s /u/ainet/hongwehl/bin/trbp /usr/local/bin/trbp\n"
 		expect "*root-#"
 
 		send "ln -s /u/ainet/hongwehl/bin/rstspa /usr/local/bin/rstspa\n"
@@ -32,6 +32,9 @@ expect {
 		expect "*root-#"
 
 		send "ln -s /u/ainet/hongwehl/bin/ldb /usr/local/bin/ldb\n"
+		expect "*root-#"
+
+		send "ln -s /u/ainet/hongwehl/bin/audit /usr/local/bin/audit\n"
 		expect "*root-#"
 
 		send "ln -s /u/ainet/hongwehl/bin/ldfrm /usr/local/bin/ldfrm\n"

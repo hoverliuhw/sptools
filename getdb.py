@@ -7,6 +7,7 @@
 #		0 - SIM_RTDB
 #	 	1 - AI_RTDB
 #		2 - Counter_RTDB
+#		3 - SGL_RTDB
 #	e.g. getdb.py debuglog EPAY29H.src 0 
 #
 # Author: Liu Hongwei
@@ -23,6 +24,7 @@ def usage():
 		0 - SIM_RTDB
 	 	1 - AI_RTDB
 		2 - Counter_RTDB
+		3 - SGL_RTDB
 	e.g. getdb.py debuglog EPAY29H.src 0 
 	''')
 	sys.exit(1)
@@ -73,7 +75,7 @@ def write_datafile(datafile, data_str):
 if len(sys.argv) < 4:
 	usage()
 
-rtdb_type_list = ['SIM_RTDB', 'AI_RTDB', 'Counter_RTDB']
+rtdb_type_list = ('SIM_RTDB', 'AI_RTDB', 'Counter_RTDB', 'SGL_RTDB')
 
 logfile = sys.argv[1]
 srcfile = sys.argv[2]
@@ -121,6 +123,8 @@ elif rtdb_type == 'AI_RTDB':
 	db_name_line = 'set GLB_AI_RTDB_Table_Name  = "AIRTDB'
 elif rtdb_type == 'Counter_RTDB':
 	db_name_line = 'set GLB_Counter_RTDB_Table_Name  = "CTRTDB'
+elif rtdb_type == 'SGL_RTDB':
+	db_name_line = 'set GLB_SGL_RTDB_Table_Name = "SGLDB'
 else:
 	print(rtdb_type + ' does not support')
 	sys.exit(1)
@@ -133,6 +137,7 @@ if srcname.startswith('EPPSA'):
 	if rtdb_type == 'SIM_RTDB':
 		db_read = rtdb_type + '!get_next_completed('
 	elif rtdb_type == 'AI_RTDB':
+# note: in eppsa log, sometimes use get_next_completed, sometimes read_completed
 		db_read = rtdb_type + '!get_next_completed('
 		db_name_line = 'set Glb_AI_Table = "AIRTDB'
 	else:

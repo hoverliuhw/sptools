@@ -126,3 +126,6 @@
 #	used for copy dg and vortex rule from automation dir to mcas
 # 	usage: cp this script to mcas, modify its dir and host ip, run it
 #
+# * audit
+#	used for sending audit command to EPPSA, no need copy and paste
+#
