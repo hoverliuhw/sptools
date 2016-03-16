@@ -1,19 +1,21 @@
 #!/bin/ksh
 
 #Information about your workstation
-#HOST=135.252.173.249
-HOST=135.252.17.202
-LOGIN=hongwehl
-PASSWD=hongwehl
-LOGDIR=/l/hongwehl/BSNL/sp28.12/log/
-LOGNAME=debuglog
+CONF="/u/ainet/hongwehl/bin/CONFIGURE"
+
+for VAR in `cat $CONF`
+do
+	eval $VAR
+done
+
 
 #This fuction used to colloect log
 #If used in another workstation, need to chang path of LogCMB
 logCollect()
 {
 echo "*************** Collecting Log ***************"
-/u/ainet/hongwehl/bin/LogCMB $LOGNAME
+#/u/ainet/hongwehl/bin/LogCMB $LOGNAME
+LogCMB $LOGNAME
 echo "*************** Uploading Log ***************"
 ftp -in $HOST <<!
 user $LOGIN $PASSWD
