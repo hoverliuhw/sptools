@@ -10,7 +10,7 @@ expect {
 		send "cd /usr/local/bin\n"
 		expect "*bin-#"
 
-		send "rm teel LogCMB trbp rstspa rstdb ldb ldfrm 2>/dev/null\n"
+		send "rm teel LogCMB trbp rstspa rstdb ldb ldfrm audit 2>/dev/null\n"
 		expect "*bin-#"
 
 		send "cd\n"
