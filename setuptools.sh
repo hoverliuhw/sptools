@@ -1,5 +1,12 @@
 #!/bin/sh
 # 
+# usage: ./setuptools.sh 
+#
+# note: install scripts to mcas for testing
+#
+# author: Liu Hongwei
+# 	hong_wei.hl.liu@alcatel-lucent.com
+#	2016/03/17
 #
 
 remoteip="135.242.106.115"
@@ -15,7 +22,7 @@ bin_dir="/usr/local/bin"
 tempconfigfile="/u/ainet/hongwehl/bin/CONFIGURE"
 configfile="$basedir/CONFIGURE"
 
-toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh"
+toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen"
 
 if [ ! -d $destdir ]
 then
@@ -24,7 +31,7 @@ fi
 
 if [ -d $basedir ]
 then
-	rm -rf $basedir
+	mv $basedir $basedir.old
 fi
 
 /usr/bin/expect -c "
@@ -67,4 +74,5 @@ expect {
 echo
 
 find $basedir/ -type f| xargs sed -i "s,$tempconfigfile,$configfile,g"
-
+chmod 755 $basedir/*
+rm -rf $basedir/.git 2>/dev/null

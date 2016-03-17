@@ -8,7 +8,7 @@ spaname=`psql -Uscncraft -At -c "select span from spm_tbl where span like 'EPPSA
 
 if [ -z "$spaname" ]
 then
-	echo "EPPSA SPA is NOT installed proc"
+	echo "EPPSA SPA is NOT in IS state"
 	exit 1
 fi
 
@@ -19,4 +19,5 @@ rk=`psql -Uscncraft -At -c "select $sqlfield from $sqltbl"`
 cmd="snd:text=\"alw:prepaid,audit=card\",RK=\"$rk\""
 echo $cmd
 $CEPEXEC SEND_TEXT "$cmd"
-echo "send result is $?"
+rc=$?
+echo "send result is $rc"
