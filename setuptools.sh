@@ -9,33 +9,38 @@
 #	2016/03/17
 #
 
+# remote host information, no need update
 remoteip="135.242.106.115"
 remoteuser=ainet
 remotepasswd=ainet1
 remotedir="/home/ainet/hongwehl/spvm53/bin"
 
+# local host(working mCAS) information, update per user's need
 rootpasswd="r00t"
-destdir="/u/ainet/hongwehl"
-basedir=$destdir/bin
-bin_dir="/usr/local/bin"
+basedir="/u/ainet/hongwehl"
+bindir=$basedir/bin
+sysbindir="/usr/local/bin"
 
+# original temp variable, no need update
 tempconfigfile="/u/ainet/hongwehl/bin/CONFIGURE"
-configfile="$basedir/CONFIGURE"
+tempbasedir="/u/ainet/hongwehl"
+configfile="$bindir/CONFIGURE"
 
 toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen"
 
-if [ ! -d $destdir ]
+if [ ! -d $basedir ]
 then
-	mkdir -p $destdir
+	mkdir -p $basedir
 fi
 
-if [ -d $basedir ]
+if [ -d $bindir ]
 then
-	mv $basedir $basedir.old
+	rm -rf $bindir.old 2>/dev/null
+	mv $bindir $bindir.old
 fi
 
 /usr/bin/expect -c "
-	spawn scp -r $remoteuser@$remoteip:$remotedir $destdir
+	spawn scp -r $remoteuser@$remoteip:$remotedir $basedir
 	expect {
 		"*yes/no\)*" {
 			send \"yes\n\"
@@ -47,7 +52,6 @@ fi
 		}
 	}
 " 2>/dev/null
-echo
 
 /usr/bin/expect -c "
 spawn su -
@@ -56,7 +60,7 @@ expect {
 		send \"$rootpasswd\n\" 
 		expect "*root-#"
 
-		send \"cd $bin_dir\n\"
+		send \"cd $sysbindir\n\"
 		expect "*bin-#"
 
 		send \"rm $toollist 2>/dev/null\n\"
@@ -65,14 +69,25 @@ expect {
 		send \"cd\n\"
 		expect "*root-#"
 
-		send \"for script in $toollist;do ln -s $basedir/\\\$script $bin_dir/\\\$script;done\n\"
+		send \"for script in $toollist;do ln -s $bindir/\\\$script $sysbindir/\\\$script;done\n\"
 		expect "*root-#"
 		send \"\n\"
 	}
 }
-"
-echo
+" 2>/dev/null
 
-find $basedir/ -type f| xargs sed -i "s,$tempconfigfile,$configfile,g"
-chmod 755 $basedir/*
-rm -rf $basedir/.git 2>/dev/null
+find $bindir/ -type f| xargs sed -i "s,$tempconfigfile,$configfile,g"
+sed -i "s,$tempbasedir,$basedir,g" $configfile
+cp $0 $bindir 2>/dev/null
+chmod 755 $bindir/*
+rm -rf $bindir/.git 2>/dev/null
+
+cat <<!eof
+
+Finished, installed tool list: 
+`echo $toollist | tr " " "\n"`
+
+before using, please update $configfile
+usage of tools can be found in $bindir/README
+
+!eof

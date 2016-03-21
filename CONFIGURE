@@ -1,7 +1,10 @@
+#WS information
 HOST=135.252.17.202
 LOGIN=hongwehl
 PASSWD=hongwehl
 LOGDIR=/l/hongwehl/BSNL/sp28.12/log/
+
+#mCAS used parameters
 LOGNAME=debuglog
 LOGCMB=LogCMB
 MSISDN=393400488418

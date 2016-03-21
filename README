@@ -54,8 +54,8 @@
 # * eteela
 # 	enhanced tailer tools, see detail by vi them
 # 
-# * ldb.sh
-# 	load db script, usage: ldb.sh <DBNAME> <DBFILE>, 
+# * ldb
+# 	load db script, usage: ldb <DBNAME> <DBFILE>, 
 #	DBFILE can be absolute path, or correlative path
 # 
 # * ldfrm
@@ -80,7 +80,7 @@
 # * rstama
 # 	a script to restart all ama related procs after ama.filter updated or other configuration updated
 # 
-# * rstdb.sh
+# * rstdb
 # 	a script to restart all rtdb
 # 
 # * rstspa
@@ -89,15 +89,15 @@
 # * stopall.sh
 # 	a script to stop all IS SPAs
 # 
-# * trbp.sh
+# * trbp
 # * trbp.audit
 # * trbp.general
-#	trbp.sh is a script to apply trace and bp for a SPA which is in IS state, usage is trbp.sh <SPA NAME>
-#	trbp.general and trbp.audit are used by trbp.sh
+#	trbp is a script to apply trace and bp for a SPA which is in IS state, usage is trbp <SPA NAME>
+#	trbp.general and trbp.audit are used by trbp
 #	trbp.general is trace template for all SPAs, 
 #	trbp.audit is specially for EPPSA SPA, because there are two extra bp files to load for audit
 #
-# * updsql.sh
+# * updsql
 #	a simple script to update sql files downloaded from webdb, it will add file header, replace host name, it should be edited before use
 #
 # * keygen
@@ -129,3 +129,6 @@
 # * audit
 #	used for sending audit command to EPPSA, no need copy and paste
 #
+# * setuptools.sh
+#	used for copy and link all above scripts
+#	usage: cp this script to mcas, modify its base dir, then run it
