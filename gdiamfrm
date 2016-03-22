@@ -16,10 +16,10 @@ then
 	exit 1
 fi
 
-BASEDIR="/u/ainet/hongwehl/bin"
-SMSFRM="$BASEDIR/sms.frm"
-PSFRM="$BASEDIR/ps.frm"
-NGINFRM="$BASEDIR/ngin.frm"
+BASEBINDIR="/u/ainet/hongwehl/bin"
+SMSFRM="$BASEBINDIR/sms.frm"
+PSFRM="$BASEBINDIR/ps.frm"
+NGINFRM="$BASEBINDIR/ngin.frm"
 
 diamcl=$1
 if [ ! -d "/sn/sps/$diamcl" ]
@@ -34,7 +34,7 @@ diam_tbl=`egrep "CCR_Message_Variable_Tbl$" $symfile | awk -F\; '{print $1}'`
 
 
 version=`psql -Uscncraft -At -c "select version_name from SA_NAME_MAP where spa_base='ENWTPPS'" | sed "s,ENWTPPS,,g"`
-echo version is $version
+#echo version is $version
 epayname=EPAY$version
 symfile=/sn/sps/$epayname/$epayname.sym
 da_tbl=`egrep "Diameter_Authorization_tbl$" $symfile | awk -F\; '{print $1}'`
@@ -56,7 +56,7 @@ FORM=$da_tbl&CHG,index.Diameter_Client_Identifier="DIAMCL",index.Application_ID=
 
 for ccr in ccru ccrt nginu ngint
 do
-	script=$BASEDIR/$ccr
+	script=$BASEBINDIR/$ccr
 	if [ -f "$script" ]
 	then
 		olddiam_tbl=`egrep FORM=SPA_DIAM $script | awk -F\& '{print $1}' | awk -F= '{print $2}'`

@@ -33,7 +33,7 @@ then
 fi
 
 function readvar {
-        for VAR in `cat $CONF`
+        for VAR in `cat $CONF | egrep -v "^#|^$"`
         do
                 eval $VAR
         done

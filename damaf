@@ -24,7 +24,7 @@ Usage:  damaf <AMA file> [<dest decode file>]
 }
 
 function readvar {
-        for VAR in `cat $CONF`
+        for VAR in `cat $CONF | egrep -v "^#|^$"`
         do
                 eval $VAR
         done

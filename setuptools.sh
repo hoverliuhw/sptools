@@ -1,10 +1,13 @@
 #!/bin/sh
 # 
-# usage: ./setuptools.sh 
+# usage: 
+#	./setuptools.sh 
 #
-# note: install scripts to mcas for testing
+# description:
+#	install scripts to mcas for testing
 #
-# author: Liu Hongwei
+# author: 
+#	Liu Hongwei
 # 	hong_wei.hl.liu@alcatel-lucent.com
 #	2016/03/17
 #
@@ -24,6 +27,7 @@ sysbindir="/usr/local/bin"
 # original temp variable, no need update
 tempconfigfile="/u/ainet/hongwehl/bin/CONFIGURE"
 tempbasedir="/u/ainet/hongwehl"
+tempbindir="$tempbasedir/bin"
 configfile="$bindir/CONFIGURE"
 
 toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen"
@@ -82,12 +86,27 @@ cp $0 $bindir 2>/dev/null
 chmod 755 $bindir/*
 rm -rf $bindir/.git 2>/dev/null
 
+# generating diameter related files
+sed -i "s,$tempbindir,$bindir,g" $bindir/gdiamfrm
+diamspa=""
+spalist=`psql -Uscncraft -At -c "select span from spa_tbl where span like 'DIAMCL%'"`
+if [ ! -z "$spalist" ]
+then
+	for spa in $spalist
+	do
+		diamspa=$spa
+	done
+fi
+echo "installing CCR related scripts with $diamspa"
+$bindir/gdiamfrm $diamspa
+#
+
 cat <<!eof
 
 Finished, installed tool list: 
-`echo $toollist | tr " " "\n"`
+`for tool in $toollist;do echo " * $tool";done`
 
-before using, please update $configfile
-usage of tools can be found in $bindir/README
+* usage of tools is in $bindir/README
+* before using, please update $configfile
 
 !eof
