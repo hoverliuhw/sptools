@@ -48,6 +48,7 @@
 # * damaf
 # * edamaf
 # 	decode ama script, based on official decode_ama, see detail by vi them
+#	decode ama related configuration has to be done before using them
 # 
 # * teel
 # * teela
@@ -93,6 +94,7 @@
 # * trbp.audit
 # * trbp.general
 #	trbp is a script to apply trace and bp for a SPA which is in IS state, usage is trbp <SPA NAME>
+#		bp file should be put under $BASEDIR/src, name should be <SPA NAME>.bp
 #	trbp.general and trbp.audit are used by trbp
 #	trbp.general is trace template for all SPAs, 
 #	trbp.audit is specially for EPPSA SPA, because there are two extra bp files to load for audit

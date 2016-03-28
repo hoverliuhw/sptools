@@ -125,7 +125,7 @@ elif rtdb_type == 'AI_RTDB':
 elif rtdb_type == 'Counter_RTDB':
 	db_name_line = 'set GLB_Counter_RTDB_Table_Name  = "CTRTDB'
 elif rtdb_type == 'SGL_RTDB':
-	db_name_line = 'set GLB_SGL_RTDB_Table_Name = "SGLDB'
+	db_name_line = 'set GLB_SGL_RTDB_Table_Name '
 else:
 	print(rtdb_type + ' does not support')
 	sys.exit(1)

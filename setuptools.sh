@@ -30,7 +30,7 @@ tempbasedir="/u/ainet/hongwehl"
 tempbindir="$tempbasedir/bin"
 configfile="$bindir/CONFIGURE"
 
-toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen"
+toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen ckcip"
 
 if [ ! -d $basedir ]
 then
@@ -43,6 +43,7 @@ then
 	mv $bindir $bindir.old
 fi
 
+echo "copying scripts from $remoteip ..."
 /usr/bin/expect -c "
 	spawn scp -r $remoteuser@$remoteip:$remotedir $basedir
 	expect {
@@ -55,7 +56,7 @@ fi
 			exp_continue
 		}
 	}
-" 2>/dev/null
+" >/dev/null 2>&1
 
 /usr/bin/expect -c "
 spawn su -
@@ -78,16 +79,17 @@ expect {
 		send \"\n\"
 	}
 }
-" 2>/dev/null
+" >/dev/null 2>&1
 
 find $bindir/ -type f| xargs sed -i "s,$tempconfigfile,$configfile,g"
-sed -i "s,$tempbasedir,$basedir,g" $configfile
+find $bindir/ -type f| xargs sed -i "s,$tempbasedir,$basedir,g"
+#sed -i "s,$tempbasedir,$basedir,g" $configfile
 cp $0 $bindir 2>/dev/null
 chmod 755 $bindir/*
 rm -rf $bindir/.git 2>/dev/null
 
 # generating diameter related files
-sed -i "s,$tempbindir,$bindir,g" $bindir/gdiamfrm
+# sed -i "s,$tempbindir,$bindir,g" $bindir/gdiamfrm
 diamspa=""
 spalist=`psql -Uscncraft -At -c "select span from spa_tbl where span like 'DIAMCL%'"`
 if [ ! -z "$spalist" ]
@@ -97,7 +99,7 @@ then
 		diamspa=$spa
 	done
 fi
-echo "installing CCR related scripts with $diamspa"
+echo "generating CCR related scripts with $diamspa"
 $bindir/gdiamfrm $diamspa
 #
 
