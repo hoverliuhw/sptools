@@ -89,15 +89,15 @@ if sys.argv[3].isdigit() == False or index < 0 or index >= len(rtdb_type_list):
 
 rtdb_type = rtdb_type_list[index]
 
-field_type_quote = ['Billing_Day_Type',
+field_type_quote = ('Billing_Day_Type',
 	'PTP_Status_Enum', 
 	'Subs_Scr_Ind_Enum',
 	'UC_Func_Status_Enum',
 	'flag',
 	'hex_value', 
 	'long_counter',
-	'string']
-field_type_no_quote = ['Active_Recharge_Event_Type',
+	'string')
+field_type_no_quote = ('Active_Recharge_Event_Type',
 	'Audit_Recharge_Day_Type',
 	'Call_Count_Type',
 	'Custom_NSelection_Type',
@@ -111,7 +111,7 @@ field_type_no_quote = ['Active_Recharge_Event_Type',
 	'Time_Count_Type',
 	'Unit_Count_Type',
 	'Wrong_PIN_Type',
-	'counter']
+	'counter')
 
 # get db name from EPAY src
 db_name_line = ''

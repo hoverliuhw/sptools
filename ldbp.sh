@@ -58,7 +58,7 @@ then
                         send \"echo 'debug:spa=EPAY29F,client=all,source=\\\"$bpfile\\\",ucl' >$tmpsubshl\n\"
                         expect \"*-> \"
                         # send \"subshl -f /u/ainet/hongwehl/bin/print.subshl\n\"
-                        send \"subshl -f $tmpsubshl\n\"
+                        send \"subshl -F $tmpsubshl\n\"
                         expect \"*-> \"
                 }
         }

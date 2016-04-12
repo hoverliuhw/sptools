@@ -25,5 +25,5 @@ cat <<!eof>$tempsubshl
 debug:spa=$spaname,client=all,source="$tempbpfile",ucl
 !eof
 
-subshl -f $tempsubshl 2>/dev/null
+subshl -F $tempsubshl 2>/dev/null
 rm $tempbpfile $tempsubshl

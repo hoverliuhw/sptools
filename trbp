@@ -33,5 +33,5 @@ fi
 
 trbpfile="/tmp/trbpfile.tmp"
 sed "s,SPANAME,$spaname,g" $traceTemplate > $trbpfile
-subshl -f $trbpfile
+subshl -F $trbpfile
 rm $trbpfile

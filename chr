@@ -1,0 +1,24 @@
+#!/bin/sh
+# to add read permission to a file
+
+filename=`readlink -f $1`
+ROOT_PASSWD="r00t"
+CEPEXEC="/sn/cr/cepexec"
+
+username=`whoami`
+if [ $username = "root" ]
+then
+        chmod a+r $filename
+else
+        /usr/bin/expect -c "
+                spawn su -
+                expect {
+                "*assword:" {
+                        send \"$ROOT_PASSWD\n\"
+                        expect \"*root-#\"
+                        send \"chmod a+r $filename\n\"
+                        expect \"*root-#\"
+                }
+        }
+        " >/dev/null 2>&1
+fi

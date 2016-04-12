@@ -135,8 +135,10 @@
 #	used for ckecking cip info in EPAY, before using it, need quit debug mode of EPAY
 #
 # * ldbp.sh
+#	used for loading bp during case run, it supports load bp on a remote host, this request is from a VFIE OLH case
 #	this script is not commonly used, only for reference
 #
 # * setuptools.sh
 #	used for copy and link all above scripts
 #	usage: cp this script to mcas, modify its base dir, then run it
+#	e.g. scp ainet@135.242.106.115:/home/ainet/hongwehl/spvm53/bin/setuptools.sh .;chmod 755 setuptools.sh;./setuptools.sh

@@ -52,8 +52,8 @@ echo "*************** Upload Log to $HOST Completed ***************"
 #######################################
 # Waiting for temp ama file finished under /billtemp
 #######################################
-LASTAMATMP=`ls -1 /billtemp/_TEMP_* 2>/dev/null`
-if [ -f /billtemp/_TEMP_ ]
+LASTAMATMP=`ls /billtemp/_TEMP_* 2>/dev/null`
+if [ -f $LASTAMATMP ]
 then
 	echo "Waiting for AMA generated from $LASTAMATMP"
 	dot=0

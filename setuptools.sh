@@ -30,7 +30,7 @@ tempbasedir="/u/ainet/hongwehl"
 tempbindir="$tempbasedir/bin"
 configfile="$bindir/CONFIGURE"
 
-toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen ckcip"
+toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen ckcip chr"
 
 if [ ! -d $basedir ]
 then
