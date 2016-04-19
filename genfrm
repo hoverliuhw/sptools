@@ -1,0 +1,226 @@
+#!/bin/sh
+
+#################################################
+# This is frm generator on ATCA
+# Usage: genfrm <prefix>
+# Output: <prefix>.frm  <prefix>.frmbk <prefix>.sql
+#
+# Note: 1) NOT clear rcdata in PSQL in the end
+#	2) NOT generate frm for static table
+#
+# Liu Hongwei <hong_wei.hl.liu@alcatel-lucent.com>
+# 2014/12/18
+# 2016/04/18	updated, fix some bugs
+# 2016/04/19	skip static table
+#		fix bug when generate fsm table's frm
+#################################################
+
+function usage {
+	cat <<!
+	usage: genfrm <frmname>
+	output: <frmname>.frm, <frmname>.frmbk, <frmname>.sql
+!
+	exit 1
+}
+
+function genfieldlist {
+	tablename=$1
+	spaname=`echo $tablename | awk -F_ '{print $2}'`
+	spaname=`ls /sn/sps | grep -i $spaname`
+	symfile="/sn/sps/$spaname/$spaname.sym"
+	awk -v tablename=$tablename -v field_list_dir=$SPA_MAP_DIR '
+		BEGIN{
+			RS = "";
+			FS = "\n";
+		}
+		$1 ~/^'$tablename';/{
+			# @ dont track static table
+			if (match($1, /;static/)) {
+				next;
+			}
+
+			split($1, t_info, " ");
+			rc_table_name = t_info[length(t_info)]
+			rfile = field_list_dir"/"tablename".fields";
+			prefix = rc_table_name;
+			gsub(prefix"\\[\\]\\.", "", $0);
+
+			for(i = 2; i <= NF; i++) {
+				split($i, f_info, ";");
+				if (f_info[2] == "SEQ") {
+					f_info[2] = "sequence"
+				}
+				print f_info[2] > rfile;
+			}
+		}
+	' $symfile
+}
+
+if [ $# -ne 1 ]
+then
+        usage
+fi
+
+frmfile=$1".frm"
+frmbkfile=$frmfile"bk"
+>$frmfile
+>$frmbkfile
+
+SPA_MAP_DIR="/tmp";export SPA_MAP_DIR
+
+tablelist=`psql -Uscncraft -At -c "select distinct(form) from rcdata order by form"`
+for table in $tablelist
+do
+	genfieldlist $table
+done
+
+psql -Uscncraft -At -c "select * from rcdata" >$1".sql"
+psql -Uscncraft -At -c "select * from rcdata" | gawk -v frm=$frmfile -v frmbk=$frmbkfile -v field_list_dir=$SPA_MAP_DIR '
+BEGIN{
+	FS = "|";
+}
+{
+	gsub("[\\(\\)]","",$0);
+	form_name = $2;
+	operation = $3;
+	
+	# @ if fields file not exist, skip
+	# @ if file exist, system return 0, if not, return 1
+	# @ so when return 1, if sentence is true, then skip
+	if (system("test -f "field_list_dir"/"form_name".fields")) {
+		next;
+	}
+	
+	split(splitByComma($4), old, "! ");
+	split(splitByComma($5), new, "! ");
+
+	if (operation == "UPDATE") {
+		frm_record = genUpd(old, new);
+		frmbk_record = genUpd(new, old);
+	} else if (operation == "INSERT") {
+		frm_record = genNew(new);
+		frmbk_record = genOut(new);
+	} else if (operation == "DELETE") {
+		frm_record = genOut(old);
+		frmbk_record = genNew(old);
+	} else {
+		print "invalid operation : " operation;
+		print "rcdata record is: " $0;
+		next;
+	}
+
+	print frm_record > frm;
+	print frmbk_record > frmbk;
+}
+
+function splitByComma(sql_rec) {
+	split(sql_rec, array, ",");
+	str = array[1];
+	i = 2;
+	isMiddle = "N";
+	while (i <= length(array)) {
+		if (isMiddle == "Y") {
+			str = str","array[i];
+		} else {
+			str = str"! "array[i];
+		}
+		if (match(array[i], /^\"/)) {
+			isMiddle = "Y";
+		}
+		if (match(array[i], /\"$/)) {
+			isMiddle = "N";
+		}
+			
+		i++;
+	}
+	
+	return str;
+}
+
+function genUpd(old_data, new_data) {
+	frm_rec = "FORM="form_name"&CHG";
+	key_changed = "N";
+	changed_key = "GETDATA";
+	i = 1;
+	while ("cat $SPA_MAP_DIR/"form_name".fields" | getline field_name) {
+		if (match(field_name,/^index/) || field_name == "sequence") {
+			frm_rec = frm_rec"! "field_name"=\""old_data[i]"\"";
+			if (old_data[i] != new_data[i]) {
+				key_changed = "Y";
+				changed_key = changed_key"! "field_name"=\""new_data[i]"\"";
+			}
+			if (field_name == "sequence") {
+				key_changed = "Y";
+			}
+		} else {
+			if (key_changed == "Y") {
+				frm_rec = frm_rec"! "changed_key;
+				key_changed = "N";
+			}
+			if (old_data[i] != new_data[i]) {
+				if (match(new_data[i], /^\"/) && match(new_data[i], /\"$/)) {
+					frm_rec = frm_rec"! "field_name"="new_data[i];
+				} else {
+					frm_rec = frm_rec"! "field_name"=\""new_data[i]"\"";
+				}
+			}			
+		}
+ 
+		i++;
+	}
+	close("cat $SPA_MAP_DIR/"form_name".fields");
+	frm_rec = frm_rec"! CHG!";
+
+	return frm_rec;
+}
+
+function genNew(new_data) {
+	frm_rec = "FORM="form_name"&NEW";
+
+	i = 1;
+	while ("cat $SPA_MAP_DIR/"form_name".fields" | getline field_name) {
+		if (match(new_data[i], /^\"/) && match(new_data[i], /\"$/)) {
+			frm_rec = frm_rec"! "field_name"="new_data[i];
+		} else {
+			if (new_data[i] != "") {
+				frm_rec = frm_rec"! "field_name"=\""new_data[i]"\"";
+			}
+		}
+		i++;
+	}
+	close("cat $SPA_MAP_DIR/"form_name".fields");
+	frm_rec = frm_rec"! NEW!";
+
+	return frm_rec;
+}
+
+function genOut(old_data) {
+	frm_rec = "FORM="form_name"&OUT";
+
+	i = 1;
+	while ("cat $SPA_MAP_DIR/"form_name".fields" | getline field_name) {
+		if (!match(field_name, /^index/)) {
+			break;
+		}
+		if (old_data[i] != "") {
+			frm_rec = frm_rec"! "field_name"=\""old_data[i]"\"";
+		}
+
+		i++;
+	}
+	close("cat $SPA_MAP_DIR/"form_name".fields");
+	frm_rec = frm_rec"! OUT!";
+
+	return frm_rec;
+}
+
+END{
+}'
+
+for table in $tablelist
+do
+	rm $SPA_MAP_DIR/$table.fields 2>/dev/null
+done
+unset SPA_MAP_DIR
+echo "frm generated"
+#psql -Uscncraft -Atc "delete from rcdata" >/dev/null 2>&1

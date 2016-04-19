@@ -1,5 +1,7 @@
 #!/bin/sh
-# to add read permission to a file
+#
+# use root permission to add read permission to a file
+#
 
 filename=`readlink -f $1`
 ROOT_PASSWD="r00t"

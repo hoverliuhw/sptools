@@ -1,0 +1,16 @@
+#!/bin/sh
+
+########################################
+#
+# name: clrc (clear rcdata)
+# usage: clrc
+# desc.: clear rcdata
+#
+########################################
+
+tracked=`psql -Uscncraft -At -c "select tablename from pg_tables where tablename='rcdata'"`
+if [ ! -z $tracked ]
+then
+	echo "Clear rcdata"
+	psql -Uscncraft -Atc "delete from rcdata"
+fi

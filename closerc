@@ -1,0 +1,33 @@
+#!/bin/sh
+
+#################################################
+# This is RCtracker uninstall script on ATCA
+# Usage: closerc
+#
+# Liu Hongwei <hong_wei.hl.liu@alcatel-lucent.com>
+# 2016/04/18
+#################################################
+
+close_rc_tracker_sql="/tmp/close_rc_tracker.sql"
+echo "BEGIN;" >$close_rc_tracker_sql
+sql="select table_name from cat where table_name like 'SPA\\_%' and table_type='TABLE' and table_name not in ('SPA_PARAMS', 'SPA_PROCESS', 'SPA_TBL') order by table_name"
+for tblname in `psql -Uscncraft -At -c "$sql"`
+do
+	tgname="$tblname"_trigger
+#	psql -Uscncraft -At -c "drop trigger $tgname on $tblname"
+	echo "drop trigger $tgname on $tblname;" >>$close_rc_tracker_sql
+done
+echo "END;" >>$close_rc_tracker_sql
+
+psql -Uscncraft -At -f $close_rc_tracker_sql
+rm $close_rc_tracker_sql
+
+psql -U scncraft <<!eof
+
+-- log file
+\o RCtracker.log
+drop table rcdata;
+drop function create_trigger(text);
+drop function create_rcdata();
+drop function addto_rcdata();
+!eof

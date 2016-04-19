@@ -1,16 +1,20 @@
 #!/bin/sh
-# 
+
+###################################################
 # usage: 
 #	./setuptools.sh 
 #
 # description:
 #	install scripts to mcas for testing
+#	scripts in $toollist will be linked to /usr/local/bin
+#	so that no need type their full path
 #
 # author: 
 #	Liu Hongwei
 # 	hong_wei.hl.liu@alcatel-lucent.com
 #	2016/03/17
-#
+#	2016/04/18	add: openrc closerc clrc genfrm
+#################################################
 
 # remote host information, no need update
 remoteip="135.242.106.115"
@@ -30,7 +34,7 @@ tempbasedir="/u/ainet/hongwehl"
 tempbindir="$tempbasedir/bin"
 configfile="$bindir/CONFIGURE"
 
-toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen ckcip chr"
+toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen ckcip chr openrc closerc clrc genfrm"
 
 if [ ! -d $basedir ]
 then

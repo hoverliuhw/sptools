@@ -1,0 +1,101 @@
+#!/bin/sh
+
+#################################################
+# This is RCtracker install script on ATCA
+# Usage: openrc
+# 
+# Liu Hongwei <hong_wei.hl.liu@alcatel-lucent.com>
+# 2016/04/18
+#################################################
+
+psql -U scncraft <<!eof
+
+-- log file
+\a \x \f '' \o RCtracker.log
+
+-- select proname from pg_proc where proname='proname';
+
+-- function create_rcdata()
+create or replace function create_rcdata() returns text as
+\$BODY\$
+begin
+    perform * from pg_tables where tablename='rcdata' and tableowner='scncraft';
+    --perform * from pg_class where relname='rcdata';
+    if found then
+        drop table rcdata;
+    end if;
+    create table rcdata (
+        id serial primary key,   -- id, table name'_'column name'_'seq
+        form text not null,      -- form name
+        op char(6) not null,     -- operation type
+        old_data text,           -- old rc data
+        new_data text,           -- new rc data
+        time timestamp not null  -- date and time
+    );
+    return 'success';
+end;
+\$BODY\$ language 'plpgsql';
+
+select create_rcdata() as "create table rcdata: ";
+
+-- function addto_rcdata
+create or replace function addto_rcdata() returns trigger as
+\$BODY\$
+declare
+    old_row text;
+    new_row text;
+begin
+    if TG_OP = 'INSERT'    -- insert
+    then
+        select into new_row NEW;
+        insert into rcdata(form, op, time, new_data)
+            select upper(TG_RELNAME), TG_OP, now(), new_row;
+        return NEW;
+    elsif TG_OP = 'UPDATE' -- update
+    then
+        select into old_row OLD;
+        select into new_row NEW;
+        insert into rcdata(form, op, time, old_data, new_data)
+            select upper(TG_RELNAME), TG_OP, now(), old_row, new_row;
+        return NEW;
+    elsif TG_OP = 'DELETE' -- delete
+    then
+        select into old_row OLD;
+        insert into rcdata(form, op, time, old_data)
+            select upper(TG_RELNAME), TG_OP, now(), old_row;
+        return OLD;
+    end if;
+end;
+\$BODY\$ language 'plpgsql';
+
+-- function create_trigger
+create or replace function create_trigger(table_name text) returns text as
+\$BODY\$
+declare
+    trigger_name text := table_name || '_trigger';
+begin
+    perform * from pg_trigger where tgname=quote_ident(lower(trigger_name));
+    if found then
+        perform * from pg_tables where tablename=quote_ident(lower(table_name)) and tableowner='scncraft' and hastriggers='t';
+        if found then
+            execute 'drop trigger ' || trigger_name || ' on ' || table_name;
+        end if;
+    end if;
+    execute 'create trigger ' || trigger_name || ' before insert or update or delete on ' || table_name || ' for each row execute procedure addto_rcdata();';
+    return 'create ' || trigger_name || ' success';
+end;
+\$BODY\$ language 'plpgsql';
+!eof
+
+open_rc_trigger_sql="/tmp/open_rc_tracker.sql"
+echo "BEGIN;" >$open_rc_trigger_sql
+sql="select table_name from cat where table_name like 'SPA\\_%' and table_type='TABLE' and table_name not in ('SPA_PARAMS', 'SPA_PROCESS', 'SPA_TBL') order by table_name"
+for tblname in `psql -Uscncraft -At -c "$sql"`
+do
+	tgname="$tblname"_trigger
+	#psql -Uscncraft -At -c "select create_trigger('$tblname') as \"create trigger $tgname: \""
+	echo "select create_trigger('$tblname') as \"create trigger $tgname: \";" >>$open_rc_trigger_sql
+done
+echo "END;" >>$open_rc_trigger_sql
+psql -Uscncraft -At -f $open_rc_trigger_sql
+rm $open_rc_trigger_sql

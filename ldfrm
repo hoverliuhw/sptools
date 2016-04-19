@@ -1,5 +1,17 @@
 #!/bin/sh
 
+#################################################
+# This is frm loader on ATCA
+# Usage: ldfrm <name>.frm | <name>.frmbk 
+#
+# Note: when loading frmbk, it will load file conversely
+#	and clear rcdata in PSQL
+#
+# Liu Hongwei <hong_wei.hl.liu@alcatel-lucent.com>
+# 2014/12/18
+# 2016/04/18    updated, fix some bugs
+#################################################
+
 FRMFILE=$1
 fulllink=`readlink -f $FRMFILE`
 FILENAME=`basename $FRMFILE`
@@ -16,10 +28,12 @@ fi
 echo -e "END;" >> $FRMFILETMP
 /cs/sn/cr/cepexec RCV_TEXT "RCV:TEXT,SPA" <$FRMFILETMP
 
-rm $FRMFILETMP
-#tracked=`psql -Uscncraft -At -c "select tablename from pg_tables where tablename='rcdata'"`
-#if [ ! -z $tracked ]
+tracked=`psql -Uscncraft -At -c "select tablename from pg_tables where tablename='rcdata'"`
+#if [ ! -z "$tracked" ] && [ ! -z "$isFrmbk" ]
+#if [ ! -z "$tracked" ]
 #then
-#        echo "Clearing rcdata in PSQL"
+#       echo "Clear rcdata"
 #       psql -Uscncraft -c "delete from rcdata"
 #fi
+
+rm $FRMFILETMP
