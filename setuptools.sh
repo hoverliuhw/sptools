@@ -47,7 +47,7 @@ then
 	mv $bindir $bindir.old
 fi
 
-echo "copying scripts from $remoteip ..."
+echo "copying scripts from remote server ..."
 /usr/bin/expect -c "
 	spawn scp -r $remoteuser@$remoteip:$remotedir $basedir
 	expect {
@@ -106,6 +106,16 @@ fi
 echo "generating CCR related scripts with $diamspa"
 $bindir/gdiamfrm $diamspa
 #
+
+# configure decode_ama tool
+version=`psql -Uscncraft -At -c "select version_name from sa_name_map where spa_base='ENWTPPS'" | sed "s/ENWTPPS2[89]/28/g"`
+if [ ! -z "$version" ]
+then
+	decode_ama_tar=`ls $bindir/EPAY*.decode_ama.full.tar | grep -i "EPAY$version"`
+	tar xfv $decode_ama_tar -C $bindir
+	chmod 755 $bindir/decode_ama
+	rm $bindir/EPAY*.decode_ama.full.tar
+fi
 
 cat <<!eof
 
