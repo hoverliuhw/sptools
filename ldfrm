@@ -33,7 +33,7 @@ tracked=`psql -Uscncraft -At -c "select tablename from pg_tables where tablename
 #if [ ! -z "$tracked" ]
 #then
 #       echo "Clear rcdata"
-#       psql -Uscncraft -c "delete from rcdata"
+#       psql -Uscncraft -c "truncate table rcdata"
 #fi
 
 rm $FRMFILETMP
