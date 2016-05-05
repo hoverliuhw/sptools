@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# this table is to refresh cache tabls in EPAY and EPPSA
+#
+
+CEPEXEC="/sn/cr/cepexec"
+rctbl="SERVER_IMOM"
+rcfield="Server_IMOM_Access_Key"
+spaname=`psql -Uscncraft -At -c "select span from spm_tbl where span like 'EPPSA%'"`
+
+if [ ! -z "$spaname" ]
+then
+	sqltbl=`grep "$rctbl" /sn/sps/$spaname/$spaname.sym | awk -F\; '{print $1}'`
+	sqlfield=`grep $rcfield /sn/sps/$spaname/$spaname.sym | awk -F\; '{print $3}'`
+	rk=`psql -Uscncraft -At -c "select $sqlfield from $sqltbl"`
+
+	cmd="snd:text=\"UPD:REFRESHRC\",RK=\"$rk\""
+	echo $cmd
+	$CEPEXEC SEND_TEXT "$cmd"
+	rc=$?
+	echo "EPPSA send result is $rc"
+fi
+
+rctbl="client fsm IMOM"
+rcfield="IMOM_Access_Key"
+spaname=`psql -Uscncraft -At -c "select span from spm_tbl where span like 'EPAY%'"`
+
+if [ ! -z "$spaname" ]
+then
+	sqltbl=`grep "$rctbl" /sn/sps/$spaname/$spaname.sym | awk -F\; '{print $1}'`
+	sqlfield=`grep $rcfield /sn/sps/$spaname/$spaname.sym | awk -F\; '{print $3}'`
+        rk=`psql -Uscncraft -At -c "select $sqlfield from $sqltbl"`
+
+        cmd="snd:text=\"UPD:REFRESHRC\",RK=\"$rk\""
+        echo $cmd
+        $CEPEXEC SEND_TEXT "$cmd"
+        rc=$?
+        echo "EPAY send result is $rc"
+fi

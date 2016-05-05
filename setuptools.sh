@@ -15,6 +15,8 @@
 #	2016/03/17
 #	2016/04/18	add: openrc closerc clrc genfrm
 #	2016/04/20	add: decode_ama tool configuration
+#	2016/04/26	add: ckcus
+#	2016/04/28	add: refrc
 #################################################
 
 # remote host information, no need update
@@ -35,7 +37,7 @@ tempbasedir="/u/ainet/hongwehl"
 tempbindir="$tempbasedir/bin"
 configfile="$bindir/CONFIGURE"
 
-toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb getdb.py ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen ckcip chr openrc closerc clrc genfrm"
+toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb getdb.py ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen ckcip chr openrc closerc clrc genfrm refrc ckcus"
 
 if [ ! -d $basedir ]
 then
@@ -96,7 +98,7 @@ rm -rf $bindir/.git 2>/dev/null
 # generating diameter related files
 # sed -i "s,$tempbindir,$bindir,g" $bindir/gdiamfrm
 diamspa=""
-spalist=`psql -Uscncraft -At -c "select span from spa_tbl where span like 'DIAMCL%'"`
+spalist=`psql -Uscncraft -At -c "select span from spa_tbl where span like 'DIAMCL%' order by span"`
 if [ ! -z "$spalist" ]
 then
 	for spa in $spalist
@@ -113,8 +115,11 @@ version=`psql -Uscncraft -At -c "select version_name from sa_name_map where spa_
 if [ ! -z "$version" ]
 then
 	decode_ama_tar=`ls $bindir/ama.conf/EPAY*.decode_ama.full.tar | grep -i "EPAY$version"`
-	tar xfv $decode_ama_tar -C $bindir
-	chmod 755 $bindir/decode_ama
+	if [ -f $decode_ama_tar ]
+	then
+		tar xfv $decode_ama_tar -C $bindir
+		chmod 755 $bindir/decode_ama
+	fi
 #	rm $bindir/ama.conf/EPAY*.decode_ama.full.tar
 fi
 

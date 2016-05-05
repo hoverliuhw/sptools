@@ -1,0 +1,6 @@
+#!/bin/sh
+
+fc=`grep "^SPA_.*Feature_Configuration_tbl$" /sn/sps/ENWT*/*.sym |awk -F\; '{print $1}'`
+cus_id=`grep "Feature_Configuration_tbl.*Customer_Identifier" /sn/sps/ENWT*/*.sym | awk -F\; '{print $3}'`
+
+psql -Uscncraft -At -c "select $cus_id from $fc"

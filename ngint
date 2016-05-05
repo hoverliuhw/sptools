@@ -37,7 +37,4 @@ $CEPEXEC RCV_TEXT "RCV:TEXT,SPA" < $CC_NUM_FRM
 $CEPEXEC SEND_TEXT "snd:text=\"CCR:$CCR_INDEX\",RK=\"diam_key\""
 echo -e "\nSend CCRt:$CCR_INDEX, cc_request_number = $CC_NUM\n"
 
-#CC_NUM=`expr $CC_NUM + 1`
-#CC_NUM=$(($CC_NUM + 1))
-CC_NUM=1
-echo $CC_NUM > $CC_NUM_COUNTER
+rm $CC_NUM_COUNTER

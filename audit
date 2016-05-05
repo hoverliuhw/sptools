@@ -41,6 +41,6 @@ cmd="snd:text=\"alw:prepaid,audit=card\",RK=\"$rk\""
 echo $cmd
 $CEPEXEC SEND_TEXT "$cmd"
 rc=$?
-echo "send result is $rc"
+echo "audit time: $hour$min, send result: $rc"
 
 rm $tmpfrm

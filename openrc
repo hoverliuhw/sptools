@@ -89,7 +89,8 @@ end;
 
 open_rc_trigger_sql="/tmp/open_rc_tracker.sql"
 echo "BEGIN;" >$open_rc_trigger_sql
-sql="select table_name from cat where table_name like 'SPA\\_%' and table_type='TABLE' and table_name not in ('SPA_PARAMS', 'SPA_PROCESS', 'SPA_TBL') order by table_name"
+#sql="select table_name from cat where table_name like 'SPA\\_%' and table_type='TABLE' and table_name not in ('SPA_PARAMS', 'SPA_PROCESS', 'SPA_TBL') order by table_name"
+sql="select item from RCMENUTBL where item in (select table_name from cat where table_name like 'SPA\\_%' and table_type='TABLE' and table_name not in ('SPA_PARAMS', 'SPA_PROCESS', 'SPA_TBL') order by table_name) and title NOT like 'server global static%' order by item"
 for tblname in `psql -Uscncraft -At -c "$sql"`
 do
 	tgname="$tblname"_trigger

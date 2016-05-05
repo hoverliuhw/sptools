@@ -138,6 +138,14 @@
 #	used for loading bp during case run, it supports load bp on a remote host, this request is from a VFIE OLH case
 #	this script is not commonly used, only for reference
 #
+# * ckcus
+#	sometimes i need check which customer's data is being used on this machine,
+#	thanks to God there is a field names Customer_Identifier in FC table, so this script will print this value
+#	and let you know which customer data on this machine
+#
+# * refrc
+#	from EPAY29J, there is an IMOM command REFRESHRC to refresh cached tables like FF/TPD, this script will do this to EPAY and EPPSA
+#
 # * setuptools.sh
 #	used for copy and link all above scripts
 #	usage: cp this script to mcas, modify its base dir, then run it
