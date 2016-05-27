@@ -1,12 +1,14 @@
 #!/bin/sh
 
-mcas_host="135.242.107.188"
+mcas_host="135.242.106.103"
+display="135.252.17.202:1.0"
 
 p250alu="135.252.170.143"
 mgts_user="hongwehl"
 mgts_passwd="hongwehl"
 assign_name="ITU_SSP201_SCP309_VFDE"
-state_name="ep3257"
+state_name="CML2_SHORT_CODE_RCHG"
+timer=15
 
 MGTS_DATA=/home/catapult/USERS/$mgts_user/datafiles
 
@@ -24,7 +26,7 @@ MGTS_DATA=/home/catapult/USERS/$mgts_user/datafiles
 			expect \"*$mgts_user> \"
 			send \"setenv OS_TYPE Linux\n\"
 			expect \"*$mgts_user> \"
-			send \"setenv DISPLAY 135.252.17.202:4.0\n\"
+			send \"setenv DISPLAY $display\n\"
 			expect \"*$mgts_user> \"
 
 			send \"source /home/catapult/USERS/$mgts_user/mgts_cit_csh\n\"
@@ -46,7 +48,10 @@ MGTS_DATA=/home/catapult/USERS/$mgts_user/datafiles
 			send \"networkExecute $assign_name -download\n\"
 			expect \"*datafiles> \"
 
-			send \"shelfPASM EE -node SSP -machine \\\"$state_name State Machine\\\" -run -wait -log $MGTS_DATA/$state_name.mgts.runlog\n\"
+			send \"shelfPASM EE -node SSP -machine \\\"$state_name State Machine\\\" -run -log $MGTS_DATA/$state_name.mgts.runlog\n\"
+			expect \"*datafiles> \"
+
+			send \"sleep $timer\n\"
 			expect \"*datafiles> \"
 
 			send \"pkill -u $mgts_user passThru\n\"

@@ -146,6 +146,9 @@
 # * refrc
 #	from EPAY29J, there is an IMOM command REFRESHRC to refresh cached tables like FF/TPD, this script will do this to EPAY and EPPSA
 #
+# * runstate
+#	a script to run state machine on p250alu
+#
 # * setuptools.sh
 #	used for copy and link all above scripts
 #	usage: cp this script to mcas, modify its base dir, then run it
