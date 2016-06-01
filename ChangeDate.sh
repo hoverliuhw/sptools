@@ -1,12 +1,38 @@
 #!/bin/sh
 
-newdate=0102090933
+newdate=010109002033
+if [ $# -gt 1 ]
+then
+	newdate=$1
+fi
+blades=`ls /opt/config/servers/`
 
-for blade in `ls /opt/config/servers/`
-do
-	ssh $blade date $newdate
-done
+user=`whoami`
+root_passwd="r00t"
 
-touch /sn/log/de*
-touch /sn/log/OM*
-touch /sn/log/meas*
+if [ $user = "root" ]
+then
+	for blade in $blades
+	do
+		ssh $blade date $newdate
+	done
+
+	touch /sn/log/de*
+	touch /sn/log/OM*
+	touch /sn/log/meas*
+
+	exit 0
+fi
+
+/usr/bin/expect -c "
+        spawn su -
+        expect {
+        "*assword:" {
+                send \"$root_passwd\n\"
+                expect \"*root-#\"
+                send \"for blade in \`ls /opt/config/servers/\`;do ssh \\\$blade date $newdate;done\n\"
+                expect \"*root-#\"
+                send \"touch /sn/log/de*;touch /sn/log/OM*;touch /sn/log/meas*\n\"
+                expect \"*root-#\"
+        }
+}"
