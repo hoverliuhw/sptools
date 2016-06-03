@@ -59,6 +59,10 @@
 # 	load db script, usage: ldb <DBNAME> <DBFILE>, 
 #	DBFILE can be absolute path, or correlative path
 # 
+# * pldb
+# 	load db using PMSGtool64, which is faster, usage: pldb <DBNAME> <DBFILE>, 
+#	DBFILE can be absolute path, or correlative path
+# 
 # * ldfrm
 # 	load frm/frmbk file on mcas, usage ldfrm <frm|frmbk>, 
 #	note: frmbk is read in opposite order

@@ -1,0 +1,42 @@
+#!/bin/sh
+# load db using /cs/sn/rdb/PMSGtool64 interface
+# usage: pldb <dbname> <data file>
+# 
+# author: Liu Hongwei
+# date: 2016/06/02
+
+tmpfile=/tmp/tmp.pmsgtool
+
+if [ $# -ne 2 ]
+then
+	echo "please input dbname and dbfile"
+	exit 1
+fi
+
+dbname=$1
+dbfile=$2
+echo 1 >$tmpfile
+quote="'"
+sed -n 3,\$p $dbfile | gawk -v QUOTE=$quote -v RCFILE="/cs/sn/rdb/$dbname.ti" '
+BEGIN{
+	ind = 1;
+	while (getline line < RCFILE > 0) {
+		split(line, t, " ")
+		rcv[ind] = t[2]
+		ind++
+	}
+}
+{
+	for (i = 2; i < NF; i++) {
+		gsub(QUOTE, "", $i)
+		if (length($i) == 0) {
+			continue;
+		}
+		print rcv[i] "=" $i
+	}
+	print "i"
+}' >>$tmpfile
+echo "q">>$tmpfile
+
+/cs/sn/rdb/PMSGtool64 -q 9999 -s 1 -n Y -t $dbname <$tmpfile | sed "s/> //g"
+rm $tmpfile
