@@ -1,3 +1,6 @@
+#!/bin/sh
+# this is a script to update sql which is got from webdb
+
 sed -i "1ipsql -h pglocalhost -U scncraft <<!eof\nBEGIN;" *.sql
 sed -i "\$aCOMMIT;\n!eof" *.sql
 sed -i "s/SZ1OCS1/SPVM71A/g" *.sql

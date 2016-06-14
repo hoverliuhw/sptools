@@ -5,16 +5,23 @@
 # author: Liu Hongwei
 # date: 2016/06/02
 
-tmpfile=/tmp/tmp.pmsgtool
-
 if [ $# -ne 2 ]
 then
-	echo "please input dbname and dbfile"
+	echo "usage: pldb <dbname> <data file>"
 	exit 1
 fi
 
 dbname=$1
 dbfile=$2
+
+isDBinstalled=`psql -Uscncraft -At -c "select * from rtdb_app where db_name='$dbname'"`
+if [ -z "$isDBinstalled" ]
+then
+        echo "$dbname is NOT installed"
+        exit 1
+fi
+
+tmpfile=/tmp/tmp.pmsgtool
 echo 1 >$tmpfile
 quote="'"
 sed -n 3,\$p $dbfile | gawk -v QUOTE=$quote -v RCFILE="/cs/sn/rdb/$dbname.ti" '
