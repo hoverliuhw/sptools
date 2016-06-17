@@ -60,7 +60,7 @@
 #	DBFILE can be absolute path, or correlative path
 # 
 # * pldb
-# 	load db using PMSGtool64, which is faster, usage: pldb <DBNAME> <DBFILE>, 
+# 	load db using PMSGtool64, when RTDB file is not very big, it is faster than ldb, usage: pldb <DBNAME> <DBFILE>, 
 #	DBFILE can be absolute path, or correlative path
 # 
 # * ldfrm
