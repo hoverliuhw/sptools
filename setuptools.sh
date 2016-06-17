@@ -37,6 +37,7 @@ tempbasedir="/u/ainet/hongwehl"
 tempbindir="$tempbasedir/bin"
 configfile="$bindir/CONFIGURE"
 
+# copy tools
 toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb pldb getdb.py ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen ckcip chr openrc closerc clrc genfrm refrc ckcus"
 
 if [ ! -d $basedir ]
@@ -101,16 +102,17 @@ diamspa=""
 spalist=`psql -Uscncraft -At -c "select span from spa_tbl where span like 'DIAMCL%' order by span"`
 if [ ! -z "$spalist" ]
 then
+	echo "Configuring CCR related scripts with $diamspa"
 	for spa in $spalist
 	do
 		diamspa=$spa
 	done
+	$bindir/gdiamfrm $diamspa
 fi
-echo "generating CCR related scripts with $diamspa"
-$bindir/gdiamfrm $diamspa
 #
 
 # configure decode_ama tool
+echo "Configuring AMA related scripts"
 version=`psql -Uscncraft -At -c "select version_name from sa_name_map where spa_base='ENWTPPS'" | sed "s/ENWTPPS2[89]/28/g"`
 if [ ! -z "$version" ]
 then
@@ -122,6 +124,29 @@ then
 	fi
 #	rm $bindir/ama.conf/EPAY*.decode_ama.full.tar
 fi
+
+/usr/bin/expect -c "
+spawn su -
+expect {
+	"*assword:" {
+		send \"$rootpasswd\n\"
+		expect "*root-#"
+
+		send \"cd /cs/sn/bill\n\"
+		expect "*bill-#"
+
+		send \"cp billing.config billing.config.bak\n\"
+		expect "*bill-#"
+
+		send \"sed -i s/^blocksize=.*$/blocksize=10/g billing.config\n\"
+		expect "*bill-#"
+
+		send \"\n\"
+	}
+}
+" >/dev/null 2>&1
+rstama
+# Finish configuring ama
 
 cat <<!eof
 
