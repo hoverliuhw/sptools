@@ -113,7 +113,7 @@ fi
 
 # configure decode_ama tool
 echo "Configuring AMA related scripts"
-version=`psql -Uscncraft -At -c "select version_name from sa_name_map where spa_base='ENWTPPS'" | sed "s/ENWTPPS2[89]/28/g"`
+version=`psql -Uscncraft -At -c "select version_name from sa_name_map where spa_base='ENWTPPS'" | sed "s/ENWTPPS//g" |sed "s/2[89]/28/g"`
 if [ ! -z "$version" ]
 then
 	decode_ama_tar=`ls $bindir/ama.conf/EPAY*.decode_ama.full.tar | grep -i "EPAY$version"`
