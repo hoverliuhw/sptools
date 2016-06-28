@@ -1,0 +1,77 @@
+#!/bin/sh
+# convert rtdb data file to json format, for SLLUnit usage
+# usage: db2json <dbname>.data[suffix] <dbname>.data[suffix] <dbname>.data[suffix] ...
+#	maximum 9 data file a time
+#	suffix can be empty
+# Liu Hongwei
+# 2016/06/27
+
+if [ $# -eq 0 ]
+then
+	echo "usage: db2json <dbname>.data[suffix], suffix can be empty"
+	exit 1
+fi
+
+jsonfile=rtdb.json
+tmpfile=$jsonfile.tmp
+>$tmpfile
+
+function gen_data_rec {
+	dbfile=$1
+	dbname=`echo $dbfile | tr "[a-z]" "[A-Z]" | sed "s/.DATA.*//g"`
+        isDBinstalled=`psql -Uscncraft -At -c "select * from rtdb_app where db_name='$dbname'"`
+        if [ -z "$isDBinstalled" ]
+        then
+                echo "$dbname is NOT installed, skip $dbfile"
+		return
+        fi
+
+	name=`echo $dbname | sed "s/[0-9][0-9].*//g"`
+	quote="'"
+	sed -n 3,\$p $dbfile | gawk -v QUOTE=$quote -v RCFILE="/cs/sn/rdb/$dbname.ti" -v name=$name '
+	BEGIN{
+	        ind = 1
+	        while (getline line < RCFILE > 0) {
+	                split(line, t, " ")
+	                rcv[ind] = t[2]
+	                ind++
+	        }
+	}
+	{
+		op = 1
+		data = "{\"_exist\": \""op"\", \"_name\": .*"name".*\""
+	        for (i = 2; i < NF; i++) {
+	                gsub(QUOTE, "", $i)
+	                if (length($i) == 0) {
+	                        continue
+	                }
+	                data = data ", \""rcv[i] "\": \"" $i "\""
+	        }
+		data = data "}"
+		print "\t\t"data
+	}' >> $tmpfile
+}
+
+>$tmpfile
+for dbfile in $*
+do
+	gen_data_rec $dbfile
+done
+
+cat << !eof >$jsonfile
+"dbdata": {
+        "description": "update RTDB data, generated from RTDB data file",
+        "task": "DataTask",
+        "uri": "{ws_url}",
+        "timer": [0, 0, 0],
+        "mode": "auto",
+        "start": "",
+        "data":[
+!eof
+tac $tmpfile | sed -e "2,\$s/\$/,/g" | tac >>$jsonfile
+cat << !eof >>$jsonfile
+        ]
+}
+!eof
+
+rm $tmpfile

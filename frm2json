@@ -1,0 +1,65 @@
+#!/bin/sh
+# convert frm file to json file which can be used in SLLUnit
+# usage: frm2json <frmfile> <output json file>
+#
+# Liu Hongwei
+# 2016/06/27
+
+if [ $# -eq 0 ]
+then
+	echo "please input frm file and json file name"
+fi
+
+frmfile=$1
+jsonfile=$2
+if [ -z $jsonfile ]
+then
+	jsonfile=`echo $frmfile | sed "s/.frm//g"`
+	jsonfile=$jsonfile".rc.json"
+fi
+
+tmpfile="$jsonfile.tmp"
+>$tmpfile
+
+cat $frmfile | sed "s/GETDATA! //g" | while read line
+do
+	form_name=`echo $line | awk -F\& '{print $1}'| sed s/FORM=//g`
+	rctblname=`psql -Uscncraft -At -c "select title from rcmenutbl where item='$form_name'"`
+	spaname=`psql -Uscncraft -At -c "select parent from rcmenutbl where item='$form_name'"`
+	echo $line | awk -F"! " -v tblname="$rctblname" -v spaname=$spaname -v jsonfile="$jsonfile" '
+	{
+		op = 1
+		if ($NF == "OUT!") {
+			op = 0
+		}
+
+		type = substr(spaname, 1, length(spaname) - 3)
+		data = "{\"_exist\": \""op"\", \"_type\": \""type ".*\", \"_name\": "tblname"\""
+		for (i = 2; i < NF; i++) {
+			iequal = index($i, "=")
+			key = substr($i, 1, iequal - 1)
+			value = substr($i, iequal + 1)
+			data = data ", \""key"\": "value
+		}
+		data = data "}"
+		print "\t\t"data
+	}' >>$tmpfile
+done
+
+cat << !eof >$jsonfile
+"rcdata": {
+        "description": "update SPA data, generated from frm file",
+        "task": "DataTask",
+        "uri": "{ws_url}",
+        "timer": [0, 0, 0],
+        "mode": "auto",
+        "start": "",
+        "data":[
+!eof
+tac $tmpfile | sed -e "2,\$s/\$/,/g" | tac >>$jsonfile
+cat << !eof >>$jsonfile
+	]
+}
+!eof
+
+rm $tmpfile

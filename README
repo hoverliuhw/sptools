@@ -153,6 +153,10 @@
 # * runstate
 #	a script to run state machine on p250alu
 #
+# * frm2json
+# * db2json
+#	to convert frm file and rtdb data file to json format
+#
 # * setuptools.sh
 #	used for copy and link all above scripts
 #	usage: cp this script to mcas, modify its base dir, then run it
