@@ -20,6 +20,7 @@ BASEBINDIR="/u/ainet/hongwehl/bin"
 SMSFRM="$BASEBINDIR/sms.frm"
 PSFRM="$BASEBINDIR/ps.frm"
 NGINFRM="$BASEBINDIR/ngin.frm"
+DIAMBASEFRM="$BASEBINDIR/diambase.frm"
 
 diamcl=$1
 if [ ! -d "/sn/sps/$diamcl" ]
@@ -28,16 +29,45 @@ then
 	exit 1
 fi
 
-symfile=/sn/sps/$diamcl/$diamcl.sym
-globalrc=`egrep "client global;rc$" $symfile | awk -F\; '{print $1}'`
-diam_tbl=`egrep "CCR_Message_Variable_Tbl$" $symfile | awk -F\; '{print $1}'`
-
+diamsymfile=/sn/sps/$diamcl/$diamcl.sym
+globalrc=`egrep "client global;rc$" $diamsymfile | awk -F\; '{print $1}'`
+diam_tbl=`egrep "CCR_Message_Variable_Tbl$" $diamsymfile | awk -F\; '{print $1}'`
+diamcl_fsm_tbl=`psql -Uscncraft -At -c "select item from rcmenutbl where title like 'client fsm Diameter_Peer_FSM' and parent='$diamcl'"`
+diamcl_fsm_rk=`grep diam_client_access $diamsymfile | awk -F\; '{print $3}'`
+diamcl_fsm_seq=`psql -Uscncraft -At -c "select seq from $diamcl_fsm_tbl where $diamcl_fsm_rk='diam_key' limit 1"`
 
 version=`psql -Uscncraft -At -c "select version_name from SA_NAME_MAP where spa_base='ENWTPPS'" | sed "s,ENWTPPS,,g"`
 #echo version is $version
 epayname=EPAY$version
-symfile=/sn/sps/$epayname/$epayname.sym
-da_tbl=`egrep "Diameter_Authorization_tbl$" $symfile | awk -F\; '{print $1}'`
+epaysymfile=/sn/sps/$epayname/$epayname.sym
+da_tbl=`egrep "Diameter_Authorization_tbl$" $epaysymfile | awk -F\; '{print $1}'`
+epay_diam_fsm_tbl=`psql -Uscncraft -At -c "select item from rcmenutbl where title like 'client fsm Diameter_PROT_FSM%' and parent='$epayname'"`
+epay_diam_fsm_seq=`psql -Uscncraft -At -c "select seq from $epay_diam_fsm_tbl limit 1"`
+
+>$DIAMBASEFRM
+isDAExist=`psql -Uscncraft -At -c "select count(*) from $da_tbl where INDX_1='DIAMCL'"`
+
+if [ $isDAExist -eq 0 ]
+then
+	cat <<!eof >$DIAMBASEFRM
+FORM=$da_tbl&NEW,index.Diameter_Client_Identifier="DIAMCL",index.Application_ID="4",Diameter_Client_Service_ID="375",Diameter_Client_Service_Support="Y",Service_Context_ID="version2.clci.ipc@vodafone.com",NEW!
+!eof
+fi
+
+if [ ! -z "$diamcl_fsm_seq" ]
+then
+	cat <<!eof >>$DIAMBASEFRM
+FORM=$diamcl_fsm_tbl&CHG,sequence="$diamcl_fsm_seq",GETDATA,Routing_String_SSN.routing_string="DM4S317",Routing_String_SSN.internal_ssn="317",CHG!
+!eof
+fi
+
+if [ ! -z "$epay_diam_fsm_seq" ]
+then
+	cat <<!eof >>$DIAMBASEFRM
+FORM=$epay_diam_fsm_tbl&CHG,sequence="$epay_diam_fsm_seq",GETDATA,Routing_String_SSN.routing_string="DM4",Routing_String_SSN.internal_ssn="318",CHG!
+!eof
+fi
+#/cs/sn/cr/cepexec RCV_TEXT "RCV:TEXT,SPA" <$DIAMBASEFRM
 
 cat <<!eof >$SMSFRM
 FORM=$globalrc&CHG,Diameter_AVP_Bound_Enum="diameter_vsabe_3gpp_ro",CHG!

@@ -6,7 +6,7 @@
 #
 # description:
 #	install scripts to mcas for testing
-#	scripts in $toollist will be linked to /usr/local/bin
+#	scripts in $toollist are linked to /usr/local/bin
 #	so that no need type their full path
 #
 # author: 
@@ -17,6 +17,8 @@
 #	2016/04/20	add: decode_ama tool configuration
 #	2016/04/26	add: ckcus
 #	2016/04/28	add: refrc
+#	2016/07/06	update: decode_ama part,
+#			add creating /ubilling and /billtemp
 #################################################
 
 # remote host information, no need update
@@ -43,6 +45,16 @@ toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ld
 if [ ! -d $basedir ]
 then
 	mkdir -p $basedir
+fi
+
+if [ ! -d $basedir/src ]
+then
+	mkdir -p $basedir/src
+fi
+
+if [ ! -d $basedir/log ]
+then
+	mkdir -p $basedir/log
 fi
 
 if [ -d $bindir ]
@@ -98,22 +110,61 @@ rm -rf $bindir/.git 2>/dev/null
 
 # generating diameter related files
 # sed -i "s,$tempbindir,$bindir,g" $bindir/gdiamfrm
-diamspa=""
-spalist=`psql -Uscncraft -At -c "select span from spa_tbl where span like 'DIAMCL%' order by span"`
-if [ ! -z "$spalist" ]
+diamspa=`psql -Uscncraft -At -c "select span from spa_tbl where span like 'DIAMCL%' order by span desc limit 1"`
+if [ ! -z "$diamspa" ]
 then
 	echo "Configuring CCR related scripts with $diamspa"
-	for spa in $spalist
-	do
-		diamspa=$spa
-	done
 	$bindir/gdiamfrm $diamspa
 fi
 #
 
 # configure decode_ama tool
-echo "Configuring AMA related scripts"
-version=`psql -Uscncraft -At -c "select version_name from sa_name_map where spa_base='ENWTPPS'" | sed "s/ENWTPPS//g" |sed "s/2[89]/28/g"`
+# include copy decode_ama, ama.filter, and update /cs/sn/bill/billing.config
+# creating /billtemp and /ubilling
+# note: this is only for default, for new ama structure, need more config, refer to VFCZ
+echo "configuring AMA related scripts"
+
+if [ ! -d /billtemp ]
+then
+	echo "creating dir /billtemp"
+	/usr/bin/expect -c "
+	spawn su -
+	expect {
+		"*assword:" {
+			send \"$rootpasswd\n\"
+			expect "*root-#"
+
+			send \"AddLV vg=user1 name=billtemp size=1G mount=/billtemp replicate=yes\n\"
+			expect "*root-#"
+
+			send \"\n\"
+		}
+	}
+	"
+fi
+
+if [ ! -d /ubilling ]
+then
+	echo "creating dir /ubilling"
+	/usr/bin/expect -c "
+	spawn su -
+	expect {
+		"*assword:" {
+			send \"$rootpasswd\n\"
+			expect "*root-#"
+
+			send \"AddLV vg=user1 name=ubilling size=1G mount=/ubilling replicate=yes\n\"
+			expect "*root-#"
+
+			send \"\n\"
+		}
+	}
+	"
+
+fi
+
+#version=`psql -Uscncraft -At -c "select version_name from sa_name_map where spa_base='ENWTPPS'" | sed "s/ENWTPPS2[89]/28/g"`
+version=`psql -Uscncraft -At -c "select version_name from sa_name_map where spa_base='ENWTPPS'" | sed "s/ENWTPPS//g" |sed "s/^2[89]/28/g"`
 if [ ! -z "$version" ]
 then
 	decode_ama_tar=`ls $bindir/ama.conf/EPAY*.decode_ama.full.tar | grep -i "EPAY$version"`
@@ -123,6 +174,13 @@ then
 		chmod 755 $bindir/decode_ama
 	fi
 #	rm $bindir/ama.conf/EPAY*.decode_ama.full.tar
+
+	ama_filter_file=`ls $bindir/ama.conf/ama.filter* | grep -i $version`
+	if [ ! -f "/cs/sn/bill/ama.filter" ] && [ -f "$ama_filter_file" ]
+	then
+		cp $ama_filter_file /cs/sn/bill/ama.filter
+		chmod 644 /cs/sn/bill/ama.filter
+	fi
 fi
 
 /usr/bin/expect -c "
@@ -138,7 +196,7 @@ expect {
 		send \"cp billing.config billing.config.bak\n\"
 		expect "*bill-#"
 
-		send \"sed -i s/^blocksize=.*$/blocksize=10/g billing.config\n\"
+		send \"sed -i s/^blocksize=1531$/blocksize=10/g billing.config\n\"
 		expect "*bill-#"
 
 		send \"\n\"
