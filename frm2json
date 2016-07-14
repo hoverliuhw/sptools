@@ -34,7 +34,7 @@ do
 		}
 
 		type = substr(spaname, 1, length(spaname) - 3)
-		data = "{\"_exist\": \""op"\", \"_type\": \""type ".*\", \"_name\": "tblname"\""
+		data = "{\"_exist\": \""op"\", \"_type\": \""type ".*\", \"_name\": \""tblname"\""
 		for (i = 2; i < NF; i++) {
 			iequal = index($i, "=")
 			key = substr($i, 1, iequal - 1)

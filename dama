@@ -51,7 +51,8 @@ then
 fi
 
 #VERSION=`$DECODE_AMA | grep SUREPAY |awk '{print $1}'`
-VERSION=`$DECODE_AMA | egrep "[ ]+v[0-9]+" | awk '{print $1}'`
+#VERSION=`$DECODE_AMA | egrep "[ ]+v[0-9]+" | awk '{print $1}'`
+VERSION=v`psql -Uscncraft -At -c "select version_name from sa_name_map where spa_base='ENWTPPS'" | sed "s/ENWTPPS//g" |sed "s/^2[89]/28/g" | tr "[A-Z]" "[a-z]"`
 echo "ama version is $VERSION"
 
 while getopts :m:l:r: option
