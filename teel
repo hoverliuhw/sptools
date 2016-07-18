@@ -16,6 +16,7 @@ logCollect()
 echo "*************** Collecting Log ***************"
 #/u/ainet/hongwehl/bin/LogCMB $LOGNAME
 LogCMB $LOGNAME
+sed -i "s/>>>/>/g" $LOGNAME
 echo "*************** Uploading Log ***************"
 ftp -in $HOST <<!
 user $LOGIN $PASSWD
