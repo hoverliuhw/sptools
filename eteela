@@ -45,6 +45,7 @@ tailer deb|tee $LOGNAME
 #logCollect
 echo "*************** Collecting Log ***************"
 $LOGCMB $LOGNAME
+sed -i "s/>>>/>/g" $LOGNAME
 echo "*************** Uploading Log ***************"
 ftp -in $HOST <<!
 user $LOGIN $PASSWD
