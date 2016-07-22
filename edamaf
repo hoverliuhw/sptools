@@ -119,7 +119,7 @@ do
 		FILTER_STR="Record Details"
 		while read fieldname
 		do
-       	 		FILTER_STR=$FILTER_STR"|^$fieldname\\s+:"
+       	 		FILTER_STR=$FILTER_STR"|^$fieldname\\s*:"
         	done < $AMAFIELD_FILTER
 	fi
 
