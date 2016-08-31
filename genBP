@@ -1,0 +1,168 @@
+#!/usr/bin/perl -w
+#/u/regtest/software/perl-5.8/bin/perl -w
+#History:
+#  07-1-9  vicky add code to fix the bug that no breakpoints generated if code line contain ":" contation
+#  08-9-4  piggy add code to fix the bug that "cannot concatenate an integer expression: not a string"
+our @table_name = ("Subscriber_Trace_tbl","Hot_Line_tbl","Original_Account_Data_tbl","Call_ID_tbl","CF_IMOM_Parameter_tbl","Calls_In_Progress","Bonus_tbl","NRTDB_Calculation_Result_tbl","FCI_SCI_Param_tbl","Generic_Number_tbl","Trace_Account_tbl","Available_SMSC_tbl");
+$keyword1="element_exists";
+$keyword2="prefix_matches";
+$keyword3="best_match";
+$totalnum=0;
+$linenum=0;
+if($#ARGV==-1)
+{
+  die "pls specify the parameter\n -f FILE\n -spa SPANAME\n";
+  
+}
+@argv=@ARGV;
+%args=@argv;
+$Inputfile=$args{"-f"};
+$MYNODE=$ENV{MYNODE};
+#print "$Inputfile\n";
+  if(!$Inputfile)
+  {
+    $Inputfile=$args{"-spa"}; 
+     die "pls specify the parameter\n -f FILE\n -spa SPANAME\n" if(!$Inputfile);
+     #print "$MYNODE/sn/sps/$Inputfile/$Inputfile.src";
+     open(File,"$MYNODE/sn/sps/$Inputfile/$Inputfile.src")||die " can not open the file $Inputfile";
+  }
+  else 
+  {
+    open(File,"$Inputfile")||die " can not open the file";
+  }
+open(Output,">bkpoint") || die "can't open file bkpoint";
+
+# Added by Liu Hongwei
+  if($Inputfile=~/EPAY/)
+  {
+	printf Output "at 1..2500000 print(\"at_line: \", \$at_line) end at\nset Glb_Service_Measurement_Interval=100000\nset Glb_DEBUG_LEVEL=5\nset Glb_Cache_Table_Clear_Interval=3600\n";
+  }elsif($Inputfile=~/EPPSA/){
+	printf Output "at 1..2000000 print(\"at_line: \", \$at_line) end at\nset Glb_Service_Meas_Interval = 1000\nset Glb_Service_Measurement_Interval=100000\n";
+  }else{
+	printf Output "at 1..2000000 print(\"at_line: \", \$at_line) end at\n";
+  }
+
+# End by Liu Hongwei
+while($line=<File>)
+ {
+  $linenum=$.;
+  next if($line=~/\#/);
+#  next if($line=~/[0-9]/);
+  if($line=~/^\s*if/|| $line=~/^\s*test/||$line=~/^\s*set\sGlb_Best_Match\s=/)
+  {
+      chop($line);
+     $line=$line.<File>;
+     if($line=~/\Q$keyword1/|| $line=~/\Q$keyword2/ || $line=~/\Q$keyword3/)
+     {
+       $Not_Used=0; 
+       foreach(@table_name)
+      {
+         if($line=~/\Q$_/)
+         {
+           $Not_Used=1;
+            last;
+         }
+      }
+     next if($Not_Used);
+     while($line!~/(\(.+\))/)
+     {
+       chop($line);
+       $line=$line.<File>;
+     
+ #     printf("$. $line\n");
+      
+      }
+    if($line=~/[s,h]\s*\(\s*(\S+\s*,)/)
+    {
+        $table=$1;
+        chop($table);
+ #      printf("$.Table =%s\n",$table);
+    }
+    else
+    { 
+	   next;
+   } 
+     if($line=~/[s,h]\s*\(\s*(\S+\s*,)\s*(\S+?)\s*\)/)
+      {
+        my $key=$2;
+	if($key=~/\"ALL\"/)
+	{
+	  printf Output "at $linenum print(\"===>$table key =\") end at \n";
+         }
+	else 
+	{
+		if($key=~/\((\S+)/)
+		{
+			$key=$1;
+		}
+     		printf Output "at $linenum print(\"===>$table key =\",$key) end at \n";
+        } 
+        $totalnum=$totalnum+1;
+      }
+     else 
+      {
+      #BEGIN: added by vicky for the bug that no breakpoints generated when code lines contain ":" concatatian
+      if($line=~/[s,h]\s*\(\s*(\S+\s*,)\s*(\S+?)\s*:\s*(\S+?)\s*\)/)
+      {
+       my $key1=$2;
+       my $key2=$3;
+       if ($key2=~/\((\S+)/)
+       {
+         $key2=$1; 
+       }
+
+       #added by piggy for the bug:
+       #"Error: cannot concatenate an integer expression: not a string"
+       #print "key1=$key1, key2=$key2\n";
+       if ($key2 =~ /^\d+$/)
+       {
+         $key2="\"".$key2."\"";
+       }
+       #END
+
+       $key1=$key1.":".$key2;
+       printf Output "at $linenum print(\"===>$table key =\", $key1) end at \n";
+       printf "at $linenum print(\"===>$table key =\", $key1) end at \n";
+       $totalnum=$totalnum+1;
+      }
+      #END:  added by vicky for the bug that no breakpoints generated when code lines contain ":" concatatian
+      else
+      {
+       # printf("$. $line\n"); 
+      }
+      }
+ }  
+#    $linenum=$.;
+#   printf("at %d %s\n",$linenum,$line);
+ # added  for array_index
+  }elsif($line =~/^\s*set\s+(\w+)\.array_index\s*=\s*(\w+)\s*$/){
+      printf "at $linenum print(\"===>$1 array_index =\", $2) end at \n";
+      printf Output "at $linenum print(\"===>$1 array_index =\", $2) end at \n";
+      $totalnum=$totalnum+1;
+  }
+ }
+    printf Output "detach\n";
+    printf("total break point num is %d\n",$totalnum);
+    printf("the break point is saved in bkpoint\n");
+    close(File);
+    close(Output);
+
+# some of the bkpoint should remove.
+
+my $internalfile = 'bkpoint.internal';
+`mv bkpoint $internalfile`;
+open(FILE,"<$internalfile")||die " can not open the file";
+open(OUTPUT,">bkpoint") || die "can't open file bkpoint";
+
+while($line=<FILE>){
+
+#	if($line =~/(:Local_temp_Index|:Local_Index|Local_Temp_ECIPC_Upd_Buck_Tbl\.index|,Local_Reset_Discount_Info_tbl|L_Diam_BOU_Index_tbl|Local_Bundle_Info_Table|variable!get_counter|L_Temp_Diam_BOU_Cached)/){
+    if($line =~/(:Local_temp_Index|:Local_Index|Local_Temp_ECIPC_Upd_Buck_Tbl\.index|,Local_Reset_Discount_Info_tbl|L_Diam_BOU_Index_tbl|Local_Bundle_Info_Table|variable!get_counter|L_Temp_Diam_BOU_Cached|L_SPI_UC_Cross_tbl\.key\.value|L_SPI_Ro_Info_tbl\.key\.value|L_Temp_Adjust_Limit_Key:L_Sequence_Number|L_Ro_Info_tbl\.index|variable!get|Glb_Temp_String1:L_Loop_Counter|call_index|L_SPI_PC_Related_Grp_Bkt_tbl\.key\.value|GSL_CML_Ext_Basic_Service_Code|Input\.Table_Index|Local_AECI_DID_Tbl\.index)/){
+        next;
+    }
+    print OUTPUT ${line};
+}
+
+close(FILE);
+close(OUTPUT);
+unlink "$internalfile";
