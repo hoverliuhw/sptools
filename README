@@ -63,6 +63,12 @@
 # 	load db using PMSGtool64, when RTDB file is not very big, it is faster than ldb, usage: pldb <DBNAME> <DBFILE>, 
 #	DBFILE can be absolute path, or correlative path
 # 
+# * openrc
+# * closerc
+# * genfrm
+# * clrc
+#	RCtracker on mCAS, openrc is open, closerc is close, genfrm is generate frm, usage is genfrm <file prefix>, clrc is clear records in rcdata table
+#
 # * ldfrm
 # 	load frm/frmbk file on mcas, usage ldfrm <frm|frmbk>, 
 #	note: frmbk is read in opposite order
@@ -72,6 +78,7 @@
 # 
 # * lncmd.sh
 # 	ln teel, LogCMB, trbp, rstspa, rstdb, ldb, ldfrm to /usr/local/bin, so that these scripts can be run directly
+#	obsoleted after setuptools.sh was developed
 # 
 # * LogCMB
 # 	a script to combine log, no update to it, copy here for convinience
@@ -156,6 +163,13 @@
 # * frm2json
 # * db2json
 #	to convert frm file and rtdb data file to json format
+#
+# * readwebdb.py
+#	get spa data from webdb by customer name, specify by vi it
+#
+# * aethos.py
+#	a aethos simulator, which can be used as tcp/smpp notification server, or as rms server
+#	usage: aethos.py [-h] [-p port] [-r] [-s] [-t] [--help] [--port=<port>] [--rms] [--smpp] [--tcp]
 #
 # * setuptools.sh
 #	used for copy and link all above scripts

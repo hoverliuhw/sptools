@@ -136,7 +136,7 @@ class WebDBPageParser(HTMLParser):
         hostname = socket.gethostname().upper()
         is_mcas = False
         if hostname.endswith('0-0-1'):
-            hostname[0 : -6]
+            hostname = hostname[0 : -6]
             is_mcas = True
         os.system('sed -i "s/{0}/{1}/g" {2}/*.sql'.format(orig_hostname, hostname, realpath))
         os.system('ls {0}/*.sql > {1}/sql.list'.format(realpath, realpath))
@@ -159,7 +159,7 @@ class WebDBPageParser(HTMLParser):
 
         diamfsm_schema = WebDBPageParser.getsqlresult('''psql -Uscncraft -A -c "select * from {0}"'''.format(sqldiamfsm)).split('|')
         updfsm = '''psql -Uscncraft -At -c "update {0} set {1}='DM4', {2}='318'"'''.format(sqldiamfsm, diamfsm_schema[4], diamfsm_schema[5])
-        insertda = '''psql -Uscncraft -At -c "insert into {0} values ('DIAMCL','4','377','Y','version2.clci.ipc@vodafone.com')"'''.format(sqlda)
+        insertda = '''psql -Uscncraft -At -c "insert into {0} values ('DIAMCL','4','317','Y','version2.clci.ipc@vodafone.com')"'''.format(sqlda)
         deleteavp = '''psql -Uscncraft -At -c "truncate table {0}"'''.format(sqldiamavp)
 
         sqllist = open(realpath + "/sql.list", 'a')
