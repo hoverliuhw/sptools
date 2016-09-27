@@ -1,9 +1,45 @@
 #!/bin/sh
 # this is a script to update sql which is got from webdb
+# if it is run on mCAs, it will update following three tables:
+#	Diameter_Authorization_tbl - EPAY
+#	Diameter_PROT_FSM  - EPAY
+#	Diameter_AVP_Configuration_tbl - ENWTPPS
 
 sed -i "1ipsql -h pglocalhost -U scncraft <<!eof\nBEGIN;" *.sql
 sed -i "\$aCOMMIT;\n!eof" *.sql
 sed -i "s/SZ1OCS1/SPVM71A/g" *.sql
 ls $PWD/*.sql > sql.list
+
+enwtpps=`psql -Uscncraft -At -c "select version_name from sa_name_map where spa_base='ENWTPPS'"`
+epay=EPAY`echo $enwtpps | sed "s/ENWTPPS//g"`
+
+rcda='client global rc table Diameter_Authorization_tbl'
+rcdiamfsm='client fsm Diameter_PROT_FSM'
+rcdiamavp='public rc table Diameter_AVP_Configuration_tbl'
+
+sqlda=`psql -Uscncraft -At -c "select item from rcmenutbl where title='$rcda' and parent='$epay'"`
+sqldiamfsm=`psql -Uscncraft -At -c "select item from rcmenutbl where title='$rcdiamfsm' and parent='$epay'"`
+sqldiamavp=`psql -Uscncraft -At -c "select item from rcmenutbl where title='$rcdiamavp' and parent='$enwtpps'"`
+
+singlequote="'"
+updfsm=`gawk -v diamfsm=$sqldiamfsm -v quote=$singlequote '
+BEGIN{
+	RS = "";
+	FS = "\n";
+}
+$1 ~/client fsm Diameter_PROT_FSM/{
+	split($6, attr, ";");
+	rk = attr[3];
+	split($7, attr, ";");
+	ssn = attr[3];
+	printf("update %s set %s=%sDM4%s, %s=%s318%s", diamfsm, rk, quote, quote, ssn, quote, quote);
+}' /sn/sps/$epay/$epay.sym`
+
+cat <<!END >>$PWD/sql.list
+psql -Uscncraft -c "insert into $sqlda values ('DIAMCL','4','317','Y','version2.clci.ipc@vodafone.com' )"
+psql -Uscncraft -c "$updfsm"
+psql -Uscncraft -c "truncate table $sqldiamavp"
+!END
+
 chmod 755 sql.list
 chmod 755 *.sql
