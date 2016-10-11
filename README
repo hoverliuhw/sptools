@@ -165,7 +165,9 @@
 #	to convert frm file and rtdb data file to json format
 #
 # * readwebdb.py
-#	get spa data from webdb by customer name, specify by vi it
+#	get spa data from webdb by customer name, 
+#       usage: aethos.py [-h] [-c customer] [-d database] [--help] [--customer=<customer>] [--db=<database>]
+#              see detail by ./readwebdb.py -h
 #
 # * aethos.py
 #	a aethos simulator, which can be used as tcp/smpp notification server, or as rms server

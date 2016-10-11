@@ -12,6 +12,7 @@ import socket
 import getpass
 import re
 import platform
+import getopt
 
 class SpaPageParser(HTMLParser):
     def __init__(self):
@@ -175,13 +176,68 @@ class WebDBPageParser(HTMLParser):
         result.close()
         return line
 
+def usage():
+    print('''usage:
+    aethos.py [-h] [-c customer] [-d database] [--help] [--customer=<customer>] [--db=<database>]
+        -h, --help: show help
+        -c, --customer: specify which customer's data to download, default is Vodafone_Italy
+        -d, --db: specify which database's data to download, default is the latest one which contains EPAY data
+                  if db is specified, no need specify customer
+
+    if no arguments, default is Vodafone_Italy, database is the latest one
+    example:
+        ./readwebdb.py
+        ./readwebdb.py -h
+            or ./readwebdb.py --help
+        ./readwebdb.py -c Vodafone_Italy
+            or ./readwebdb.py --customer=Vodafone_Italy
+        ./readwebdb.py -d T1OCS05-0-0_201608261050
+            or ./readwebdb.py --db=T1OCS05-0-0_201608261050
+
+    customer list:
+        'Go_Malta',
+        'Vodafone_UK',
+        'Vodafone_Netherlands',
+        'Vodafone_Hungary',
+        'BSNL',
+        'Vodafone_Italy',
+        'Vodafone_Czech',
+        'E-Plus_Service_GmbH',
+        'Vodafone_Ghana',
+        'Vodafone_Albania',
+        'Vodafone_Portugal',
+        'Vodafone_Ireland',
+        'MobileOne',
+        'Vodafone_Greece'
+    ''')
+
 if __name__ == '__main__':
-    web_db_url = "http://inuweb.ih.lucent.com/~jterpstr/cgi-bin/WebDB/webdb_make_psql.cgi"
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'c:d:h', ['customer=','db=','help'])
+    except getopt.GetoptError, e:
+        print(e)
+
+    customer = None
+    db_name = None
+    for opt, value in opts:
+        if opt in ('-h', '--help'):
+            usage()
+            sys.exit(0)
+        if opt in ('-c', '--customer'):
+            customer = value
+        if opt in ('-d', '--db'):
+            db_name = value
+
+    web_db_url = None
+    if db_name != None:
+        web_db_url = WebDBPageParser.data_url_template.format(db_name)
+    else:
+        web_db_url = "http://inuweb.ih.lucent.com/~jterpstr/cgi-bin/WebDB/webdb_make_psql.cgi"
     response = None
     try:
         response = urllib2.urlopen(web_db_url)
     except urllib2.HTTPError, e:
-        print(e)
+        print(e) # printout should be: HTTP Error 401: Unauthorized
         username = raw_input("Firewall User Authentication, CSL username: ")
         passwd = getpass.getpass()
         passwd_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
@@ -194,18 +250,24 @@ if __name__ == '__main__':
         print("connection error: {0}, \n exit!!!".format(e))
         sys.exit(1)
     
-    print("Analyzing WebDB, need a half minute ...")
-    html = response.read()
-    mainpage=WebDBPageParser()
-    mainpage.feed(html)
+
+    if db_name == None:
+        print("Analyzing WebDB, need a half minute ...")
+        html = response.read()
+        mainpage=WebDBPageParser()
+        mainpage.feed(html)
 
     spa_parser = SpaPageParser()
     downloader = DownloadPageParser()
-    downloader.dest_dir = "/home/ainet/hongwehl/site_data"
+    #downloader.dest_dir = os.getcwd()
+    #downloader.dest_dir = "/home/ainet/hongwehl/site_data"
     #downloader.dest_dir = "D:/Python/data"
 
-    customer = 'Vodafone_Italy'
-    db_name = mainpage.customer_db[customer]
+    if db_name == None:
+        if customer == None:
+            customer = 'Vodafone_Italy'
+        db_name = mainpage.customer_db[customer]
+        mainpage.close()
     print("customer: {0}, database: {1}".format(customer, db_name))
     data_url = WebDBPageParser.data_url_template.format(db_name)
     response = urllib2.urlopen(data_url)
@@ -226,4 +288,3 @@ if __name__ == '__main__':
 
     downloader.close()
     spa_parser.close()
-    mainpage.close()
