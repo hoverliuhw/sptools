@@ -211,7 +211,7 @@ class SMPPHandler(StreamRequestHandler):
                 break
 
 def usage():
-    print('''usage:  
+    print('''usage:
     aethos.py [-h] [-p port] [-r] [-s] [-t] [--help] [--port=<port>] [--rms] [--smpp] [--tcp]
         -h, --help: show help
         -p, --port: specify the port number to listen
