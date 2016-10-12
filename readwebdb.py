@@ -250,18 +250,14 @@ if __name__ == '__main__':
         print("connection error: {0}, \n exit!!!".format(e))
         sys.exit(1)
     
-
     if db_name == None:
-        print("Analyzing WebDB, need a half minute ...")
+        print("Analyzing WebDB, need a  minute ...")
         html = response.read()
         mainpage=WebDBPageParser()
         mainpage.feed(html)
 
     spa_parser = SpaPageParser()
     downloader = DownloadPageParser()
-    #downloader.dest_dir = os.getcwd()
-    #downloader.dest_dir = "/home/ainet/hongwehl/site_data"
-    #downloader.dest_dir = "D:/Python/data"
 
     if db_name == None:
         if customer == None:
@@ -271,6 +267,7 @@ if __name__ == '__main__':
     print("customer: {0}, database: {1}".format(customer, db_name))
     data_url = WebDBPageParser.data_url_template.format(db_name)
     response = urllib2.urlopen(data_url)
+
     # because there is malformed tag in spa list page, so need remove those lines using re
     html = re.sub(r'message.*</FORM>"', '', response.read())
     spa_parser.feed(html)
@@ -278,7 +275,6 @@ if __name__ == '__main__':
     for spaurl in spa_parser.spa_data_url_list:
         downloadpage = urllib2.urlopen(spaurl).read()
         downloader.feed(downloadpage)
-    #os.remove(downloader.zipfile)
 
     orig_hostname = db_name[0 : -13]
     if orig_hostname.endswith('-0-0'):
