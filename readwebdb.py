@@ -212,6 +212,9 @@ def usage():
     ''')
 
 if __name__ == '__main__':
+    if len(sys.argv) == 1:
+         usage()
+         sys.exit(1)
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'c:d:h', ['customer=','db=','help'])
     except getopt.GetoptError, e:
