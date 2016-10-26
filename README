@@ -111,7 +111,11 @@
 #	trbp.audit is specially for EPPSA SPA, because there are two extra bp files to load for audit
 #
 # * updsql
-#	a simple script to update sql files downloaded from webdb, it will add file header, replace host name, it should be edited before use
+#	a simple script to update sql files downloaded from webdb, it will:
+#	    1) add file header, BEGIN, END
+#	    2) replace host name
+#	    3) configure diameter related tables
+#	    4) configure notification server tables, include scc table
 #
 # * keygen
 #	generate msisdn number for a case tid, e.g. keygen dn1234
@@ -172,6 +176,10 @@
 # * aethos.py
 #	a aethos simulator, which can be used as tcp/smpp notification server, or as rms server
 #	usage: aethos.py [-h] [-p port] [-r] [-s] [-t] [--help] [--port=<port>] [--rms] [--smpp] [--tcp]
+#
+# * genscc.sh
+#	configure notification server, which need configure SCC table and SMPP FSM
+#	usage: genscc.sh, it will generate config_notif.sh, then run config_notif.sh
 #
 # * setuptools.sh
 #	used for copy and link all above scripts

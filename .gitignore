@@ -3,3 +3,4 @@
 *.decode_ama.full.tar
 ama.filter*
 DecodeCDR*.tar
+.*.swp

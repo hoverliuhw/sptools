@@ -40,7 +40,7 @@ tempbindir="$tempbasedir/bin"
 configfile="$bindir/CONFIGURE"
 
 # copy tools
-toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb pldb getdb.py ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen ckcip chr openrc closerc clrc genfrm refrc ckcus genBP"
+toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb pldb getdb.py ldfrm audit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen ckcip chr openrc closerc clrc genfrm refrc ckcus genBP updsql"
 
 if [ ! -d $basedir ]
 then
