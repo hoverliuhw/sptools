@@ -71,7 +71,8 @@ class WebDBPageParser(HTMLParser):
         'Vodafone_Portugal',
         'Vodafone_Ireland',
         'MobileOne',
-        'Vodafone_Greece')
+        'Vodafone_Greece',
+	'Vodafone_Qatar')
     dir_map = {'Go_Malta' : 'GOM',
         'Vodafone_UK' : 'VFUK',
         'Vodafone_Netherlands' : 'VFNL',
@@ -85,7 +86,8 @@ class WebDBPageParser(HTMLParser):
         'Vodafone_Portugal' : 'VFP',
         'Vodafone_Ireland' : 'VFIE',
         'MobileOne' : 'M1',
-        'Vodafone_Greece' : 'VFGR'}
+        'Vodafone_Greece' : 'VFGR',
+	'Vodafone_Qatar' : 'VFQ'}
     data_url_template = "http://inuweb.ih.lucent.com/~jterpstr/cgi-bin/WebDB/webdb_make_psql.cgi?action=Continue&menu=SPA&spaname=SERVICE%20PACKAGE%20MANAGEMENT%20SUBMENU&db={0}&PATH=&log_count=1"
 
     def __init__(self):
@@ -209,6 +211,7 @@ def usage():
         'Vodafone_Ireland',
         'MobileOne',
         'Vodafone_Greece'
+        'Vodafone_Qatar'
     ''')
 
 if __name__ == '__main__':

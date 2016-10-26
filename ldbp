@@ -37,9 +37,16 @@ then
 	exit 0
 fi
 
+spaname=`psql -Uscncraft -At -c "select span from spm_tbl where span like 'EPAY%'"`
+if [ -z "$spaname" ]
+then
+	echo "EPAY is not in IS state"
+	exit 1
+fi
+
 if [ ! -z "$local" ]
 then
-	echo debug:spa=EPAY29F,client=all,source=\"$bpfile\",ucl >$tmpsubshl
+	echo debug:spa=$spaname,client=all,source=\"$bpfile\",ucl >$tmpsubshl
 	subshl -F $tmpsubshl
 	echo "finish loading $bpfile locally"
 fi
@@ -55,7 +62,7 @@ then
                 "*assword:" {
                         send \"$passwd\n\"
                         expect \"*-> \"
-                        send \"echo 'debug:spa=EPAY29F,client=all,source=\\\"$bpfile\\\",ucl' >$tmpsubshl\n\"
+                        send \"echo 'debug:spa=$spaname,client=all,source=\\\"$bpfile\\\",ucl' >$tmpsubshl\n\"
                         expect \"*-> \"
                         # send \"subshl -f /u/ainet/hongwehl/bin/print.subshl\n\"
                         send \"subshl -F $tmpsubshl\n\"
