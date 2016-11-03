@@ -36,6 +36,7 @@ dview=`grep "insert.*$sqlldapfsm" $epay.sql | awk -F\' '{
 oldhostname=`echo $dview | awk -F_ '{print $1}'`
 
 echo "replace $oldhostname to $hostname"
+sed -i "/^psql\|^BEGIN;\|^COMMIT;\|^END;\|^!eof/d" *.sql
 sed -i "1ipsql -h pglocalhost -U scncraft <<!eof\nBEGIN;" *.sql
 sed -i "\$aCOMMIT;\n!eof" *.sql
 sed -i "s/$oldhostname/$hostname/g" *.sql
