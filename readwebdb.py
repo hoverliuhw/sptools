@@ -142,11 +142,11 @@ class WebDBPageParser(HTMLParser):
             hostname = hostname[0 : -6]
             is_mcas = True
         os.system('sed -i "s/{0}/{1}/g" {2}/*.sql'.format(orig_hostname, hostname, realpath))
+        if not is_mcas:
+            return
         os.system('ls {0}/*.sql > {1}/sql.list'.format(realpath, realpath))
         os.system('chmod 755 {0}/*'.format(realpath))
 
-        if not is_mcas:
-            return
         rcda ='client global rc table Diameter_Authorization_tbl'
         rcdiamfsm ='client fsm Diameter_PROT_FSM'
         rcdiamavp ='public rc table Diameter_AVP_Configuration_tbl'

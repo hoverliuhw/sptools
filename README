@@ -110,6 +110,10 @@
 #	trbp.general is trace template for all SPAs, 
 #	trbp.audit is specially for EPPSA SPA, because there are two extra bp files to load for audit
 #
+# * genBP
+# * genAuditBP
+#	original gen bp tools, copy here for convinience
+#
 # * updsql
 #	a simple script to update sql files downloaded from webdb, it will:
 #	    1) add file header, BEGIN, END
