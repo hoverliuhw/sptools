@@ -174,7 +174,7 @@
 #
 # * readwebdb.py
 #	get spa data from webdb by customer name, 
-#       usage: aethos.py [-h] [-c customer] [-d database] [--help] [--customer=<customer>] [--db=<database>]
+#       usage: readwebdb.py [-h] [-c customer] [-d database] [--help] [--customer=<customer>] [--db=<database>]
 #              see detail by ./readwebdb.py -h
 #
 # * aethos.py
@@ -184,6 +184,15 @@
 # * genscc.sh
 #	configure notification server, which need configure SCC table and SMPP FSM
 #	usage: genscc.sh, it will generate config_notif.sh, then run config_notif.sh
+#       note: not so useful :)
+#
+# * ckop
+#       check manual operations(include commands using /sn/cr/cepexec) in OMlog
+#       usage: ckop <omlog>
+#
+# * mutemeas
+#       set measurement log interval to a large value, to avoid too much measurement log in debuglog
+#       usage: mutemeas <SPA NAME>
 #
 # * setuptools.sh
 #	used for copy and link all above scripts

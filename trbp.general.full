@@ -2,6 +2,7 @@ trace:proc=SPANAME,mode=1088&1089&1109&1134&1148&1149&1150&1151&1158&1159,client
 trace:proc=SPANAME,mode=1160&1161&1163&1164&1167&1168&1257&1258&2574&2576,client=all,ucl
 trace:proc=SPANAME,mode=2624&2625&2626&2631&2632&2633&2634&2635&2636&2638,client=all,ucl
 trace:proc=SPANAME,mode=2639&2650&3850&4033&4034&778&779,client=all,ucl
+trace:proc=SPANAME,mode=1216&1218&1219&1220&1222&1224&1226,client=all,ucl;
 trace:proc=SPANAME,mode=1178&1179,machine=0-0-1,ucl
 trace:proc=SPANAME,mode=1178&1179,machine=0-0-9,ucl
 trace:proc=SPANAME,mode=1178&1179,client=all,ucl

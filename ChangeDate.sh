@@ -1,7 +1,7 @@
 #!/bin/sh
 
 newdate=010109002033
-if [ $# -gt 1 ]
+if [ $# -ge 1 ]
 then
 	newdate=$1
 fi

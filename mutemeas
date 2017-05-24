@@ -1,0 +1,33 @@
+#!/bin/sh
+
+if [ $# != 1 ]
+then
+    echo "please input spa name"
+    exit 1
+fi
+
+spaname=$1
+isIS=`psql -Uscncraft -At -c "select span from spm_tbl where span='$spaname'"`
+
+if [ -z "$isIS" ]
+then
+    echo "$spaname is not in IS"
+    exit 1
+fi
+
+tmpbpfile=/tmp/closemeas.bp
+tmpsubshl=/tmp/closemeas.subshl
+
+echo "set Glb_Service_Measurement_Interval=100000" >$tmpbpfile
+isAudit=`echo $spaname | grep EPPSA`
+if [ ! -z "$isAudit" ]
+then
+    echo "set Glb_Service_Meas_Interval = 100000" >>$tmpbpfile
+fi
+echo "detach" >>$tmpbpfile
+
+echo "debug:spa=$spaname,client=all,source=\"$tmpbpfile\",ucl" >$tmpsubshl
+
+subshl -F $tmpsubshl
+rm $tmpsubshl $tmpbpfile
+

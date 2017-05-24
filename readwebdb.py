@@ -180,7 +180,7 @@ class WebDBPageParser(HTMLParser):
 
 def usage():
     print('''usage:
-    aethos.py [-h] [-c customer] [-d database] [--help] [--customer=<customer>] [--db=<database>]
+    readwebdb.py [-h] [-c customer] [-d database] [--help] [--customer=<customer>] [--db=<database>]
         -h, --help: show help
         -c, --customer: specify which customer's data to download, default is Vodafone_Italy
         -d, --db: specify which database's data to download, default is the latest one which contains EPAY data

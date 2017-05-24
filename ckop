@@ -1,0 +1,10 @@
+#!/bin/sh
+awk '
+BEGIN{
+    FS = "\n";
+    RS = "+++";
+}
+/M  /{
+    split($1, datetime, " ")
+    print datetime[2]" "datetime[3] ": "  $2
+}' $1
