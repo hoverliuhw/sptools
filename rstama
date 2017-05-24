@@ -5,7 +5,7 @@ CEPEXEC="/sn/cr/cepexec"
 username=`whoami`
 if [ $username = "root" ]
 then
-	/opt/config/bin/PlatformSync all /cs/sn/bill
+	/opt/config/bin/PlatformSync  /cs/sn/bill all
 else
 	/usr/bin/expect -c "
 		spawn su -
@@ -13,7 +13,7 @@ else
 		"*assword:" {
 			send \"$ROOT_PASSWD\n\" 
 			expect \"*root-#\"
-			send \"/opt/config/bin/PlatformSync all /cs/sn/bill\n\"
+			send \"/opt/config/bin/PlatformSync /cs/sn/bill all\n\"
 			expect \"*root-#\"
 		}
 	}

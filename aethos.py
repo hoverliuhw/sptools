@@ -102,6 +102,7 @@ class RMSHandler(BaseRequestHandler):
         amount_s = '0' * (len(amount_s) % 2) + amount_s
         amount_s = amount_s.decode('hex')
         
+# UPE1 should be replaced by checking RRI_tbl, or else, recharge will be fail
         respsuffix = "00000000000000001200559400000065BSNL\000\000\000\000\000\000\000UPE1\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000'\020"
 
         while True:
@@ -164,6 +165,8 @@ class SMPPHandler(StreamRequestHandler):
     ESME_RINVCMDID = "00000003".decode('hex')
     ESME_RINVCMDLEN = "00000002".decode('hex')
     msgid = 4485800000
+#    start index is different per customer, VFUK is 49, BSNL is 50(experience value)
+#    the value here is the result after reducting message length of the first 4 octets
     sm_start = 49
 
     def handle(self):
@@ -218,7 +221,6 @@ def usage():
         -r, --rms: indicate this is an RMS server for recharge
         -s, --smpp: indicate this is an SMPP server for notification
         -t, --tcp: indicate this is a TCP server for notification
-    if no arguments, default is RMS server, port number is 6666
     example:
         ./aethos.py -p 6666 --rms
         ./aethos.py -p 8050 --tcp
@@ -226,6 +228,10 @@ def usage():
     ''')
 
 if __name__ == "__main__":
+    if len(sys.argv) == 1:
+         usage()
+         sys.exit(1)
+
     host = "" 
     port = 6666 
     #request_handler = TCPServerHandler
