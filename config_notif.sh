@@ -1,77 +1,23 @@
 #!/bin/sh
-# this is a script to update sql which is got from webdb
+# this is a script to configure notification related tables
 # if it is run on mCAs, it does:
-#    1) replace hostname in sql files
-#    2) configure diameter related tables, including:
-#	Diameter_Authorization_tbl - EPAY
-#	Diameter_PROT_FSM  - EPAY
-#	Diameter_AVP_Configuration_tbl - ENWTPPS
-#    3) configure notification server related tables, including:
+#    1) configure notification server related tables, including:
 #       Server_Connect_Conf_tbl - ENWTPPS
 #       SMPP_PRTCL_FSM - EPAY/EPPSA
 #       TI_CONFIG - Platform 9.1
 #       TI_EXIT - platform 9.2
 #       add SPVM53_HOST(notification server) IP in /etc/hosts
 
-dest_script="sql.list"
+dest_script="notif.sh"
+hostname=`hostname | sed "s/-0-0-1//g"`
+>$dest_script
 
 enwtpps=`psql -Uscncraft -At -c "select version_name from sa_name_map where spa_base='ENWTPPS'"`
 epay=EPAY`echo $enwtpps | sed "s/ENWTPPS//g"`
 eppsa=EPPSA`echo $enwtpps | sed "s/ENWTPPS//g"`
 
 # replace hostname in sql files
-hostname=`hostname | sed "s/-0-0-1//g"`
-oldhostname="SPVM53" #default
-rcldapfsm='client fsm LDAP_PROT_FSM'
-sqlldapfsm=`psql -Uscncraft -At -c "select item from rcmenutbl where title='$rcldapfsm' and parent='$epay'"`
-
-dview=`grep "insert.*$sqlldapfsm" $epay.sql | awk -F\' '{
-    for (i = 2; i <= NF; i++) {
-        if (match($i, "_")) {
-            print $i
-            break
-        }
-    }
-}'`
-oldhostname=`echo $dview | awk -F_ '{print $1}'`
-
-echo "replace $oldhostname to $hostname"
-sed -i "/^psql\|^BEGIN;\|^COMMIT;\|^END;\|^!eof/d" *.sql
-sed -i "1ipsql -h pglocalhost -U scncraft <<!eof\nBEGIN;" *.sql
-sed -i "\$aCOMMIT;\n!eof" *.sql
-sed -i "s/$oldhostname/$hostname/g" *.sql
-ls $PWD/*.sql > $dest_script
-
 # config diameter related
-rcda='client global rc table Diameter_Authorization_tbl'
-rcdiamfsm='client fsm Diameter_PROT_FSM'
-rcdiamavp='public rc table Diameter_AVP_Configuration_tbl'
-
-sqlda=`psql -Uscncraft -At -c "select item from rcmenutbl where title='$rcda' and parent='$epay'"`
-sqldiamfsm=`psql -Uscncraft -At -c "select item from rcmenutbl where title='$rcdiamfsm' and parent='$epay'"`
-sqldiamavp=`psql -Uscncraft -At -c "select item from rcmenutbl where title='$rcdiamavp' and parent='$enwtpps'"`
-
-singlequote="'"
-updfsm=`gawk -v diamfsm=$sqldiamfsm -v quote=$singlequote '
-BEGIN{
-	RS = "";
-	FS = "\n";
-}
-$1 ~/client fsm Diameter_PROT_FSM/{
-	split($6, attr, ";");
-	rk = attr[3];
-	split($7, attr, ";");
-	ssn = attr[3];
-	printf("UPDATE %s SET %s=%sDM4%s, %s=%s318%s", diamfsm, rk, quote, quote, ssn, quote, quote);
-}' /sn/sps/$epay/$epay.sym`
-
-cat <<!END >>$PWD/$dest_script
-
-#configure diameter
-psql -Uscncraft -c "INSERT INTO $sqlda VALUES ('DIAMCL','4','317','Y','version2.clci.ipc@vodafone.com' )"
-psql -Uscncraft -c "$updfsm"
-psql -Uscncraft -c "TRUNCATE TABLE $sqldiamavp"
-!END
 
 # configure SCC related table
 rcscc="public rc table Server_Connect_Conf_tbl"
@@ -158,4 +104,5 @@ FORM=$sqlscc&NEW,index.Port_Number="6666",index.SCP_Name="$hostname",index.SPA_I
 !eof
 
 chmod 755 $dest_script
-chmod 755 *.sql
+./$dest_script
+
