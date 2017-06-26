@@ -1,0 +1,492 @@
+#!/usr/bin/perl
+#function: search R/CV menu item quickly
+#
+#Author: tliu002 <Tao.Liu@alcatel-lucent.com>
+#Date  : 2009-07
+
+
+#change log:
+#
+#change log:20100108: bugfix
+
+#change log:20150507: by cshi002, support running on lab.
+
+
+use Term::ANSIColor;
+use Term::ANSIColor qw(:constants);
+#use strict;
+use integer;
+
+
+sub usage
+{
+	# by cshi002, support running on lab
+	# print BOLD,"==",BLUE,"S",RED,"T",GREEN,"B",WHITE,"L",RESET,BOLD,"==",RESET,RED," Ver0.9   Enjoy it!!",RESET,"\n**Assist spa developer and tester to locate the data item in rcv:menu quickly**\n",RESET;
+        print BOLD,"==",BLUE,"S",RED,"T",GREEN,"B",YELLOW,"L",RESET,BOLD,        "==",RESET,RED," Ver0.9 Plus  Enjoy it!!",RESET,YELLOW," [Lab supported]",RESET,"\n**Assist spa developer and tester to locate the data item in         rcv:menu quickly**\n",RESET;
+
+	print BOLD,GREEN,"Command Usage:\n";
+	print RESET,GREEN,"  > ",BOLD,"s/s",RESET,GREEN,"earch [string]        :search rcv:menu items\n";
+	print "  > ",BOLD,"t/t",RESET,GREEN,            "able  [table_string]  :search name in psql database\n";
+	print "  > [string]  :will defualt to execute search rcv:menu\n";
+	print "  > h/help    :show this command usage\n",RESET;
+	print "  > q/quit    :quit\n",RESET;
+}
+
+my %database={};
+my %psql_tbl_db={};
+
+sub warning
+{
+	print RED,@_,RESET;
+}
+
+sub print_res
+{
+	print RED,"--",RESET;
+	my ($tmp_s)=@_;
+	if($tmp_s =~ /^(.*)(\[[,\w*\s*]*\])$/o)
+	{
+		print $1,GREEN,$2,RESET;
+	}else{
+		print @_;
+	}
+}
+
+#read spa sym files
+sub read_sym
+{
+	my ($spaname)=@_;
+	my $start_flag=0;
+	my $cur_tbl='';
+	my $cur_num=0;
+	my $total_num=0;
+	my $is_tbl=0;
+	my $mynode=$ENV{'MYNODE'};
+	my $sympath = "$mynode/sn/sps/$spaname/$spaname.sym";
+	my $spa;
+	my $tbl_name;
+	my $number_mark;
+
+	my $item_fields_matchs;
+
+	print "[Info]: analysis spa sym $spaname ....\n";
+
+
+	if ($sympath && -f $sympath)
+	{
+		open(my $hFile, "<$sympath") || (warning("can not open $sympath") && return 0) ;
+		while(my $line=<$hFile>)
+		{
+			chomp($line);
+			if ($line =~ /^(\/\/.*|\s*)$/o)
+			{
+				$start_flag = 0;
+				$number_mark=0;
+				next;
+			}
+			my @contents=split /;/ ,$line;
+			#print @contents;
+			my $psql_tbl_name="";
+
+			#get SPA name field [the 1st line]
+			if($start_flag == 0 && $contents[0] =~m/^(SPA_)([^\s_]*)_\d*/go)
+			{
+				#$spa=$1.$2;
+				$spa=$2;
+				$psql_tbl_name = $contents[0];
+				$psql_tbl_name =~ s/(\n|\s)*//o;
+			}elsif ($start_flag == 0){
+				#print "--\n";
+				warning("SPA $contents[0] unknown! \n");
+				last;
+			}
+
+			#get number of fileds [the 1st line]		
+			if ($start_flag == 0 && $contents[1] =~ m/^\d+$/o)
+			{
+				$start_flag=1;
+				if ($contents[4] && $contents[4]=~/table/oi )
+				{
+					$contents[4] =~ s/^.*\s+(\S+)$/\1/go;
+					$cur_tbl=$1;
+					$is_tbl=1;
+					$tbl_name= $contents[2]." ".$contents[3]." table ".$cur_tbl;
+					$tbl_name=~s/global/public/go if $spa !~ /(DIAMCLSIM)/o;
+				}else{
+					$cur_tbl=$contents[2]." ".$contents[3];
+					$is_tbl=0;
+					$tbl_name=$contents[2];
+				}
+
+				$total_num=$contents[1];
+				$cur_tbl =~ s/\n*//o;
+				$psql_tbl_db{$spaname.'  '.$cur_tbl}=$psql_tbl_name;
+				next;
+			}
+
+
+			#read fields of tbl [ > the 1st line]
+			my $temp_n = 0;
+			#process number mark,for string len > 81, will gen 2 lines
+			if ($contents[0] =~ /^string\((\d+)\)$/o)
+			{
+				$temp_n = $1 / 81;
+				#print "----",$temp_n,$contents[0],"\n";
+			}
+			$number_mark = $number_mark + 1 + $temp_n;
+			$cur_num ++;
+			my $str=$contents[1];
+			my $tbl_check=$str;
+			$tbl_check =~s/\[\]\..*$//go;
+			#check if table name correct
+			if($is_tbl && $tbl_check ne $cur_tbl)
+			{
+				warning("Error: Table Name not march:Table $cur_tbl and Table $tbl_check !!\n");
+				last;
+			}
+
+			
+			#get index of item
+			$str=~ s/^[^\[\]]*\[\]\.//go;
+			#$index = $contents[2];
+			#$index =~ s/^F//o if ( $index =~ /^F\d+/o );
+			$cur_tbl =~ s/\n//o;
+			$database{$spa}{$cur_tbl}{$number_mark}=$str;
+			#print $cur_tbl,"---",$cur_num,"--",$str,"\n";
+			#$database{$spa}{$tbl_name}{$cur_num}=$str;
+
+
+			if ($cur_num >= $total_num)
+			{
+				$start_flag=0;
+				$cur_num=0;
+				$total_num=0;
+			}
+		}
+		close($hFile);
+	}else{
+		warning("Warning: File $sympath not exist Or Parameter error!!\n");
+	}
+}
+
+#---read spa sym test
+#read_sym('/l/taoliu/mynode_r26N/sn/sps/ENWTPPS269/ENWTPPS269.sym');
+#read_sym('/l/taoliu/mynode_r26N/sn/sps/EPAY269/EPAY269.sym');
+#read_sym('/l/taoliu/mynode_r26N/sn/sps/NWTGSM064/NWTGSM064.sym');
+#read_sym('/l/taoliu/mynode_r26N/sn/sps/NWTCOM094/NWTCOM094.sym');
+#read_sym('/l/taoliu/mynode_r26N/sn/sps/DIAMCLSIM/DIAMCLSIM.sym');
+
+
+# for SP28.16
+#read_sym('EPAY29G');
+#read_sym('ENWTPPS29G');
+#read_sym('NWTGSM066');
+#read_sym('NWTCOM109');
+#read_sym('DIAMCL29E');
+#read_sym('SUREDV29E');
+#read_sym('EPPSA29G');
+
+
+sub read_rtdb
+{
+	my ($rtdbname)=@_;
+	my $start_block=0;
+	my $mynode=$ENV{'MYNODE'};
+
+	# by cshi002, support running on lab
+	my $rtdbfile;
+	if ($mynode)
+	{
+		# runnning on EE
+		$rtdbfile = $mynode."/cc/rc/forms/rdb/EE/".$rtdbname.".odin" if ($mynode && $rtdbname && -d $mynode);
+	} else {
+		# runnning on lab
+		$rtdbfile = "/cs/sn/rdb/".$rtdbname.".odin" if ($rtdbname);
+	}
+
+	my $cur_num=0;
+	my $field_name;
+
+	print "[Info]: analysis RTDB odin $rtdbname ....\n";
+
+	if($rtdbfile && -f $rtdbfile)
+	{
+		open(my $hFile,"<$rtdbfile") || (warning("Error: File $rtdbfile cannot open !!\n") and return 0);
+		while(<$hFile>)
+		{
+			my $line=$_;
+			next if ($line !~ /^(form|field)/o );
+
+			if( ( $line=~ /^form\s+(\S*)$/o ) && ($rtdbname ne $1) )
+			{
+				warning("Error: RTDB $rtdbname not coincide with $1 IN FILEs\n");
+				last;
+			}
+
+			if ( $line=~/^field\s+(\S*)$/o )
+			{
+				$cur_num ++;
+				$field_name=$1;
+				#print "RTDB,",$rtdbname,",",$cur_num,",",$field_name,"\n";
+				$database{"RTDB"}{$rtdbname}{$cur_num}=$field_name;
+			}
+		}
+		close($hFile);
+	}else{
+		warning ("RTDB not exist !!\n");
+		return 0;
+	}
+}
+
+#----test for RTDB
+#read_rtdb("ACMDB102");
+#read_sym("DIAMCLSIM");
+#read_sym("EPAY269");
+
+#read spa & RTDB screen according ENV
+sub refresh_data{
+	my $mynode=$ENV{'MYNODE'};
+
+	# by cshi002, support running on lab
+	my $rtdb_str;
+        if ($mynode)
+        {
+                # runnning on EE
+		return 0 if( ! -d $mynode);
+		$rtdb_str='/cc/rc/forms/rdb/EE/';
+        } else {
+                # runnning on lab
+		$rtdb_str='/cs/sn/rdb/';
+        }
+
+	my $spa_str='/sn/sps/';
+	my @rtdbs;
+	my @spas;
+
+	opendir(my $rtdbFile,$mynode.$rtdb_str)||die "Can not open RTDB DIR";
+	@rtdbs = readdir($rtdbFile) ;
+	@rtdbs = grep (s/\.odin$//io ,@rtdbs);
+	close($rtdbFile);
+
+	opendir(my $spaFile,$mynode.$spa_str)||die "Can not open SPA DIR";
+	my @spas = readdir($spaFile) ;
+	@spas = grep !/^(\.\.*|SU)$/o && -d $mynode.$spa_str.$_, @spas;
+	close($spaFile);
+
+	read_rtdb $_ for @rtdbs;
+	read_sym $_ for @spas;
+
+	dump_data();
+}
+
+
+my $dumppath=$ENV{'HOME'}."/.DataDB";
+
+#dump data into files
+sub dump_data
+{
+	unlink $dumppath if(-f $dumppath);
+	open(my $hFile, ">>$dumppath") || die "Can not Create file $dumppath \n";
+	print "Start to dump data...\n";
+	for my $tbl_name (keys %psql_tbl_db)
+	{
+		print $hFile $tbl_name,",",$psql_tbl_db{$tbl_name},"\n";
+	}
+	print $hFile "--------split here \n";
+	my ($f1,$f2,$f3,$f4,$f5,$f6)=(0,0,0,0,0,0);
+	while(($f1,$f2)= each %database)
+	{
+		#print $f1,"-",$f2,"\n";
+		while(($f3,$f4) = each %$f2)
+		{
+			while(($f5,$f6) = each %$f4)
+			{
+				#while(($7,$8)=each %$f6)
+				{
+					print $hFile $f1,",",$f3,",",$f5,",",$f6,"\n";	
+				}
+			}
+		}
+	}
+	close($hFile);
+	print "Dump data complete.\n";
+}
+
+my @stringlist; #rcv:menu name items
+my @stringpsql; #psql table name list
+
+sub format_str
+{
+	if (%psql_tbl_db +0)
+	{
+		my ($f1,$f2)=(0,0);
+		while(($f1,$f2)= each %psql_tbl_db)
+		{
+			push @stringpsql,$f1.",[".$f2."]";
+		}
+	}
+	if (%database+0)
+	{
+		my ($f1,$f2,$f3,$f4,$f5,$f6)=(0,0,0,0,0,0);
+		while(($f1,$f2)= each %database)
+		{
+			#print $f1,"-",$f2,"\n";
+			while(($f3,$f4) = each %$f2)
+			{
+				while(($f5,$f6) = each %$f4)
+				{
+					#my $str_tmp=$f1.",\t".$f3.",\t".$f6.",\tP".(($f6+0)/16+1)."\t".$f5;
+					my $str_tmp=$f1.",[".$f3."],[".$f6."],[P";
+					my $page=($f5 % 16)==0?($f5/16):($f5/16 + 1);
+					$str_tmp .= $page.", ".$f5."]";
+
+					push @stringlist, $str_tmp;	
+				}
+			}
+		}
+
+	}
+}
+
+
+sub Init
+{
+	my $need_refresh=0;
+	if(-f $dumppath) 
+	{
+		my $hFile;
+		#$need_refresh=1 if ! open(my $hFile,"< $dumppath") ;
+		if (! $need_refresh)
+		{
+			print BLUE,"The *Old* SPA & RTDB screen Data Exist, Do you want to refresh it? \n[Note: Needn't refresh it if spa & RTDB have no change!! ]",RED," n ",RESET;
+			my $tmp=readline(STDIN);
+			chomp($tmp);
+			if ( $tmp !~ /^\s*(y|yes)\s*$/io )
+			{
+				my $f1;
+				my $f2;
+				my $f3;
+				my $f4;
+				$need_refresh=1 if ! open($hFile, "< $dumppath") ;
+				if (! $need_refresh)
+				{
+					$need_refresh=1;
+					my $data_type=0;
+					while(chomp(my $ss=<$hFile>))
+					{
+						$need_refresh=0;
+						if($ss =~ /--------/o)
+						{
+							$data_type = 1;
+							next;
+						}
+						if($data_type == 0)
+						{
+							#read psql table name database
+							($f1,$f2)=split /,/o,$ss;
+							$psql_tbl_db{$f1}=$f2;
+						}elsif ($data_type == 1)
+						{	
+							#read rcv:menu items database
+							($f1,$f2,$f3,$f4)=split /,/o,$ss ;
+							$database{$f1}{$f2}{$f3}=$f4 if($f1 && $f2 && $f3 && $f4);
+						}
+					}
+				}
+			}else{
+				$need_refresh=1;
+			}
+			#close($hFile);
+		}
+	}else{
+		$need_refresh=1;
+	}
+
+	if($need_refresh)
+	{
+		refresh_data();
+	}
+}
+
+sub search_x
+{
+	my ($param)=@_;
+	if( $param)
+	{
+		for my $s (@stringlist)
+		{
+			if ($s =~ /$param/i)
+			{
+				print_res $s;
+				print "\n";
+			}
+		}
+	}
+}
+
+##search table name in psql according tbl name in spa
+sub search_t
+{
+	my ($param)=@_;
+	if($param)
+	{
+		for my $s (@stringpsql)
+		{
+			if ($s =~ /$param/i)
+			{
+				print_res $s;
+				print "\n";
+			}
+		}
+	}
+}
+
+sub cmd_loop
+{
+	usage();
+	Init();
+	format_str();
+	if (@stringlist+0)
+	{
+		my $cmd="";
+		do
+		{
+			print RESET,">",ON_WHITE,BLUE,BOLD;
+			chomp($cmd=<STDIN>);
+			print RESET;
+			#my ($subcmd,@subparam)=split /\s/,$cmd;
+		
+			$cmd =~ /^(\w\w*)\s*(.*)$/o;
+			my $subcmd=$1;
+			my $subparam=$2;
+			if (! $subparam )
+			{
+				if( $cmd =~ /^\s*(exit|quit|q)\s*$/io )
+				{
+					exit 0;
+				}elsif($subcmd =~ /^\s*(h|help)\s*$/io)
+				{
+					usage();
+				}else{
+					search_x($subcmd);
+				}
+			}elsif ($subcmd =~ /^\s*(s|search)\s*$/io )
+			{
+				search_x($subparam);
+			}elsif ($subcmd =~ /^\s*(t|table)\s*$/io)
+			{
+				search_t($subparam);
+			}else{
+				search_x($cmd);
+			}
+		}while($cmd !~ /^\s*(exit|quit|q)\s*$/io );
+	}else{
+		print RED,"Need to refresh SPA & RTDB screen Data at First!\n",RESET;
+	}
+}
+
+# by cshi002, support running on lab
+# $ENV{'MYNODE'} should be empty on lab
+# print $ENV{'MYNODE'};
+
+cmd_loop();
