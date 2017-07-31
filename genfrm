@@ -199,7 +199,7 @@ function genOut(old_data) {
 
 	i = 1;
 	while ("cat $SPA_MAP_DIR/"form_name".fields" | getline field_name) {
-		if (!match(field_name, /^index/)) {
+		if (!match(field_name, /^index/) && field_name != "sequence") {
 			break;
 		}
 		if (old_data[i] != "") {
