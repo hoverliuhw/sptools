@@ -79,7 +79,7 @@ function logcmb {
         }
         
         /\/sn\/log\/CRmsg/{
-            match($0, /\/sn\/log\/CRmsg.*\.0-0-[0-9]{1,2}/)
+            match($0, /\/sn\/log\/CRmsg.*\.0-0-[0-9]+/)
             logloc = substr($0, RSTART, RLENGTH)
             split(logloc, t, "/")
             logname = t[5]
