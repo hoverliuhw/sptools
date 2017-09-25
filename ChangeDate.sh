@@ -1,6 +1,8 @@
 #!/bin/sh
 
 newdate=010109002033
+
+# if there is no arguments, argc is 0
 if [ $# -ge 1 ]
 then
 	newdate=$1
