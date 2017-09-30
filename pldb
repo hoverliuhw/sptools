@@ -21,7 +21,7 @@ then
         exit 1
 fi
 
-tmpfile=/tmp/tmp.pmsgtool
+tmpfile=/tmp/$dbname.pmsgtool
 echo 1 >$tmpfile
 quote="'"
 sed -n 3,\$p $dbfile | gawk -v QUOTE=$quote -v RCFILE="/cs/sn/rdb/$dbname.ti" '
