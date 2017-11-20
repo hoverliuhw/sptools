@@ -1,0 +1,46 @@
+#!/bin/sh
+# this script is to send ai rtdb audit command
+
+CEPEXEC="/sn/cr/cepexec"
+tmpfrm="/tmp/audit.frm"
+rctbl="SERVER_IMOM"
+rcfield="Server_IMOM_Access_Key"
+spaname=`psql -Uscncraft -At -c "select span from spm_tbl where span like 'EPPSA%'"`
+
+if [ -z "$spaname" ]
+then
+	echo "EPPSA SPA is NOT in IS state"
+	exit 1
+fi
+
+sqltbl=`grep $rctbl /sn/sps/$spaname/$spaname.sym | awk -F\; '{print $1}'`
+sqlfield=`grep $rcfield /sn/sps/$spaname/$spaname.sym | awk -F\; '{print $3}'`
+rk=`psql -Uscncraft -At -c "select $sqlfield from $sqltbl"`
+
+cp_tbl_name=`psql -Uscncraft -At -c "select item from RCMENUTBL where title='public rc table Common_Parameters_tbl' and parent=(select version_name from sa_name_map where spa_base='ENWTPPS')"`
+
+hour=`date '+%H'`
+min=`date '+%M'`
+sec=`date '+%S'`
+if [ $sec -lt 55 ]
+then
+        min=$(($min + 1))
+else
+        min=$(($min + 2))
+fi
+min=$(($min % 60))
+if [ $min -lt 10 ]
+then
+        min="0$min"
+fi
+host_name=`hostname | tr "a-z" "A-Z" | sed "s/-0-0-1//g"`
+echo "FORM=$cp_tbl_name&CHG,index=\"$host_name\",AI_Audit_Time=\"$hour$min\",CHG!" >$tmpfrm
+ldfrm $tmpfrm
+
+cmd="snd:text=\"ALW:POSTPAID,AUDIT=ACCOUNT\",RK=\"$rk\""
+echo $cmd
+$CEPEXEC SEND_TEXT "$cmd"
+rc=$?
+echo "audit time: $hour$min, send result: $rc"
+
+rm $tmpfrm

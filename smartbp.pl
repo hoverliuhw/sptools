@@ -822,7 +822,7 @@ sub changeGlobalVarByValue {
 
 sub genLineBp {
 	my $count	= @CodePoint;
-	my $max		= 2000000;
+	my $max		= 3000000;
 	my $offset1	= 0;
 	my $offset2	= 0;	
 	my $idx		= 0;
