@@ -1,11 +1,15 @@
 #!/bin/sh
 # this script is to send CCRi, CCRu, CCRt in one command
+interval=5
+
 ccri
-sleep 5
+sleep $interval
 
 ccru
-sleep 5
+sleep $interval
 
 ccrt
-echo "sleep 5s after ccrt"
-sleep 5
+echo "sleep $interval seconds after ccrt"
+sleep $interval
+
+pkill -u $LOGNAME tailer

@@ -35,7 +35,7 @@ open(Output,">bkpoint") || die "can't open file bkpoint";
 # Added by Liu Hongwei
   if($Inputfile=~/EPAY/)
   {
-	printf Output "at 1..2500000 print(\"at_line: \", \$at_line) end at\nset Glb_Service_Measurement_Interval=100000\nset Glb_DEBUG_LEVEL=5\nset Glb_Cache_Table_Clear_Interval=3600\n";
+	printf Output "at 1..3000000 print(\"at_line: \", \$at_line) end at\nset Glb_Service_Measurement_Interval=100000\nset Glb_DEBUG_LEVEL=5\nset Glb_Cache_Table_Clear_Interval=3600\n";
   }elsif($Inputfile=~/EPPSA/){
 	printf Output "at 1..2000000 print(\"at_line: \", \$at_line) end at\nset Glb_Service_Meas_Interval = 1000\nset Glb_Service_Measurement_Interval=100000\n";
   }else{

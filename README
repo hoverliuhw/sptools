@@ -54,6 +54,10 @@
 # * teela
 # * eteela
 # 	enhanced tailer tools, see detail by vi them
+#
+# * tl
+#	enhanced tailer tools, which integrates LogCMB in it, it combines tmp logs in parallel with tailer,
+#	so it is much faster, this is very useful when the case generates massive tmp logs
 # 
 # * ldb
 # 	load db script, usage: ldb <DBNAME> <DBFILE>, 
@@ -73,20 +77,21 @@
 # 	load frm/frmbk file on mcas, usage ldfrm <frm|frmbk>, 
 #	note: frmbk is read in opposite order
 # 
-# * lnccr.sh
+# * lnccr.sh -- deleted
 # 	ln ccri/u/t, ngini/u/t to /usr/local/bin, so that these scripts can be run directly
 # 
-# * lncmd.sh
+# * lncmd.sh -- deleted
 # 	ln teel, LogCMB, trbp, rstspa, rstdb, ldb, ldfrm to /usr/local/bin, so that these scripts can be run directly
 #	obsoleted after setuptools.sh was developed
 # 
 # * LogCMB
 # 	a script to combine log, no update to it, copy here for convinience
+#	from 2017/06/23, it was re-developed to accelerate combining speed
 # 
-# * lsdb.sh
+# * lsdb.sh -- deleted
 # 	a script to list all installed RTDBs
 # 
-# * lsdv.sh
+# * lsdv.sh -- deleted
 # 	a script to list all configured dataviews, it is slow
 # 
 # * rstama
@@ -136,6 +141,8 @@
 # * gdiamfrm
 #	generate ps.frm, sms.frm, ngin.frm, and update ccru, ccrt, nginu, ngint
 #	usage: gdiamfrm <DIAMCL NAME>
+#	note: this function is integrated into setuptools.sh
+#
 # * S7SCH_flags
 #	full trace mode list of S7SCH, put this file under /sn/cr/tracedir, then restart S7SCH, trace modes in this list will be applied
 #
@@ -149,6 +156,9 @@
 #
 # * audit
 #	used for sending audit command to EPPSA, no need copy and paste
+#
+# * aiaudit
+#	used for sending ai rtdb audit command to EPPSA, no need copy and paste
 #
 # * ckcip
 #	used for ckecking cip info in EPAY, before using it, need quit debug mode of EPAY
