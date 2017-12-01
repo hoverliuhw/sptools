@@ -12,4 +12,4 @@ ccrt
 echo "sleep $interval seconds after ccrt"
 sleep $interval
 
-pkill -u $LOGNAME tailer
+pkill -u $(whoami) tailer
