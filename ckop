@@ -1,4 +1,16 @@
 #!/bin/sh
+# this is a small script to check OMlog to see what has been done in subshl
+# usage: ckop <omlog>
+if [ $# -eq 0 ]
+then
+    echo "usage: ckop <omlog>"
+    exit 1
+fi
+if [ ! -f $1 ]
+then
+    echo "$1 does not exist"
+    exit 1
+fi
 awk '
 BEGIN{
     FS = "\n";

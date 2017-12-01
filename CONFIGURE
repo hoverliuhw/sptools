@@ -5,6 +5,7 @@ PASSWD=hongwehl
 LOGDIR=/l/hongwehl/BSNL/sp28.12/log/
 
 #mCAS used parameters
+#LOGNAME conflicts with environment variable LOGNAME
 LOGNAME=debuglog
 LOGCMB=LogCMB
 MSISDN=393400488418
