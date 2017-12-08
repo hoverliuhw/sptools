@@ -2,6 +2,7 @@
 # generate breakpoint file
 # based: tliu002 2009/04/25 16:45:18 <Tao.Liu@alcatel-lucent.com>
 # enhanced: xiangdzh 2012/03/29 <Xiangdong.Zhou@alcatel-lucent.com>
+# minimum fix just for error elimination and progressbar enhanced: jinglonz 2017/02/17 <Jinglong.zhao@alcatel-lucent.com>
 
 # import
 use File::Spec;
@@ -82,9 +83,9 @@ our $Table_TYPE_PATTERN = '(element_exists|best_match|prefix_matches)\s*'.$Match
 our $IgnoreFunction =
 	'get_spa_process_status|clock|LDAP_Check_Account_Expiration|printable_hex_to_raw_string|counter|power|ftoi|element_exists';
 our $IgnoreSLLFunction = 
-	'Get_Day_ID|UnixTime_To_Date_TimeZone|Calculate_End_Date|Insert_Annc|map|Calculate_First_Day_Current_Period|Get_Call_Dynamic_Counter|Get_Call_Dynamic_Flag|Get_Call_Dynamic_String|Get_Call_Dynamic_Long_Counter|Get_Call_Dynamic_Float|Convert_Value_To_Text_String|Get_Total_Reserved_Bucket|Get_Total_Captured_Bucket|Get_Total_Refunded_Bucket|Parser_URL_Format|Diam_COSP_Exists_In_ExtCOSP|Need_Determine_Zone|Date_Format_Conversion|Fill_Text_Format|Get_Long_Length_Value_From_EPM';
+	'Get_Day_ID|UnixTime_To_Date_TimeZone|Calculate_End_Date|Insert_Annc|map|Calculate_First_Day_Current_Period|Get_Call_Dynamic_Counter|Get_Call_Dynamic_Flag|Get_Call_Dynamic_String|Get_Call_Dynamic_Long_Counter|Get_Call_Dynamic_Float|Convert_Value_To_Text_String|Get_Total_Reserved_Bucket|Get_Total_Captured_Bucket|Get_Total_Refunded_Bucket|Parser_URL_Format|Diam_COSP_Exists_In_ExtCOSP|Need_Determine_Zone|Date_Format_Conversion|Fill_Text_Format|Get_Long_Length_Value_From_EPM|Process_PP|Process_Dot_To_Comma|find|Check_Lmt_VoLTE_On_No_DiamAllowed|Check_Applied_UBD_Counter|Generate_AMA_UBD_Threashold_Exceed|Compress_One_Digit_And_Filler|Failover_Recover_FUP_Limit|OLH_Instance_Timer_Mapping_Oper|Ecom_Initial_Check_Generate_AMA';
 our $ignoreTable =
-	'Local_Reset_Discount_Info_tbl|L_Diam_BOU_Index_tbl|L_SPI_UC_Cross_tbl|L_SPI_Ro_Info_tbl';
+	'Local_Reset_Discount_Info_tbl|L_Diam_BOU_Index_tbl|L_SPI_UC_Cross_tbl|L_SPI_Ro_Info_tbl|L_SPI_PC_Related_Grp_Bkt_tbl';
 
 # common function
 sub usage {
@@ -115,15 +116,11 @@ sub p_error {
 
 sub incr_progress {
 	my ($process) = @_;
-    #$progress->update( $cur_pro_num++ ) if $cur_pro_num <= MAX_Grid;
-    $cur_pro_num ++;
-    $cur_pro_num = MAX_Grid		if ($process == 100);
 
-    my $t_t = int( $cur_pro_num * $OneGrid );
-    $t_t = Const_Grid 			if $t_t > Const_Grid;
+	$t_t = $process;
 
     print "\r", 'Parsed: [', '=' x $t_t, ( " " x ( Const_Grid - $t_t ) ), '] ';
-    printf( "%.0f %", $t_t / Const_Grid * 100 );
+    printf( "%.0f %", $t_t / MAX_Grid * 100);
 }
 
 FILE;
@@ -145,7 +142,6 @@ sub openFile {
 }
 
 sub closeFile {
-	print OUTPUT "detach\n"; #quit the debug mode
 	close(FILE);
 	close(OUTPUT);
 }
@@ -213,6 +209,13 @@ sub generateBp {
 	push(@ALL_BP, $pr_str);
 }
 
+#bugfix for debug error, Promo_Prio_Map_tbl does not have a default index.
+#bugfix for log error, there is no record at 'Counter_Notification_Info_tbl[0].
+our %skip_tbl_key_pair = (
+	'Promo_Prio_Map_tbl' => 'L_Prom_Usage_Info_Tbl\.Product_Type|Local_Prom_Usg_Info_Tbl\.Product_Type|Local_Prom_Usage_Info_Tbl\.Product_Type',
+	'Discount_Definition_tbl' => 'Counter_Notification_Info_tbl\.DID'
+);
+
 sub process_table_search {
     my ( $type, $params ) = @_;
 
@@ -228,6 +231,14 @@ sub process_table_search {
            	    
             #2010/10/19 22:49:01 fix, skip element_exist with table.index as key
             return '' if $tb_indx =~ /\.index$/o;
+			
+			#2017/02/17 fix  skip special tbl_key_pair to omit debug error.
+			my $ignorePair = $skip_tbl_key_pair{$tb_name};
+			if ($ignorePair  ) {
+				if($tb_indx =~ m/^\s*($ignorePair)/gi) {
+					return '' ;
+				}
+			}
             
             return '"' .$mark{"table"}." $tb_name" . ' key=",' . $tb_indx;
         }
@@ -248,9 +259,9 @@ sub process_function {
 
 		my @params_arr_tmp = ();
         for ( $idx = 0 ; $idx <= $#params_arr ; $idx++ ) {
-            $params_arr[$idx] =~ /^\s*([a-zA-Z0-9_!]*)(.*)$/o;
+            $params_arr[$idx] =~ /^\s*([&]?[a-zA-Z0-9_!]*)(.*)$/o; #add reference pattern check 2017/04/12 by jinglonz
             my $tmp_param = $1;
-            $tmp_param .= '[]' if ( $2 =~ /table/oi );
+            $tmp_param .= '[]' if ( $2 =~ /table$/oi or $2 =~ /table_type$/io );
             push( @params_arr_tmp, $tmp_param );
         }
         @params_arr = @params_arr_tmp;
@@ -258,10 +269,11 @@ sub process_function {
         $tmp1 = "(\",\n";
         if ( $#params_arr >= 0 ) {
             for ( $idx = 0 ; $idx < $#params_arr ; $idx++ ) {
+				next if ( $params_arr[$idx] =~ /^\s*&/io ); # leave reference para. un-processed at present 2017/04/13 by jinglonz
                 $tmp1 =
                   "$tmp1\"$params_arr[$idx]=\",$params_arr[$idx],\",\",\n";
             }
-            $tmp1 = "$tmp1\"$params_arr[$idx]=\",$params_arr[$idx],\n";
+            $tmp1 = "$tmp1\"$params_arr[$idx]=\",$params_arr[$idx],\n" if ( $params_arr[$idx] !~ /^\s*&/io ); # leave reference para. un-processed at present 2017/04/13 by jinglonz
         }
         $tmp1 = "$tmp1\")\"";
         $tmp  = "\"".$mark{"function"}." $func_name $tmp1";
@@ -293,9 +305,11 @@ sub process_function_return {
         $params = '"BP_LIMIT: ' . $1 . '"'
           if ($params =~ /($IgnoreFunction)\s*\(/o);
         my $ret_res = $params;
-        
         #skip return with a expression
         return ''	if ($params =~ m/\/+/o);
+		$ret_res =~ s/;//g;
+		$ret_res =~ s/0\.0/0/g;
+		$ret_res =~ s/^float\((.*)\)$/$1/gi;
         return "\"".$mark{'return'}." ".$func_name." return: \",$ret_res";
     }
     return '';
@@ -498,6 +512,9 @@ sub parsing {
 	my $linenum = 0;
 	my $prt_str = "";
 	my $tmp = 0;
+	my $fblock = ((stat(FILE))[7])/MAX_Grid; #set the progress block size.
+	my $fratio = 1;
+	my $cur_pro = 0; #current read position of the file.
 
 	$| = 1;
 	incr_progress(1);
@@ -511,11 +528,14 @@ sub parsing {
 	    	escape();
 	    	next;
 	    }
-	    #$tmp ++;
-	    #if ( $tmp > 50000 ) {
-	    #    $tmp = 0;
-	    #    incr_progress(1);
-	    #}
+		
+	    $tmp ++;
+	    if ( $tmp > 15000 ) {
+	        $tmp = 0;
+			$cur_pro = tell(FILE);
+			$fratio = int($cur_pro/$fblock) if ($cur_pro != -1);
+	        incr_progress($fratio);
+	    }
 
 		if ($line =~ /^\s*subroutine\s+([\w!]+)/o) {
 			subroutine($1, $line);
@@ -547,7 +567,7 @@ sub parsing {
 		}
 	}
 
-	incr_progress(100);
+	incr_progress(MAX_Grid);
 	#print "well done.\n";
 }
 
@@ -556,7 +576,6 @@ sub parse_conditon_table {
 	my $one_line_if_then = 0;
 	my $new_line = "";
 	my $linenum = $.;
-	my $IsFromElsIf = 0;
 
 	trim_string($line);
 	$one_line_if_then = 1 if $line =~ /\s+then/o;
@@ -569,33 +588,32 @@ sub parse_conditon_table {
 	    $line = $line . $new_line;
 	    $one_line_if_then = 1		if $line =~ /\s+then/o;
 	}
-
-	#bugfix:for elif, breakpoint can not set on elif line,need set bp next line
-	if ( $key eq 'elif' ) {	
-		#read next line till it a valid line
-		while ( $new_line = <FILE> ) {
-			#checkLineNo();
-		    last if ( $new_line !~ /^\s*#|^\s*$/o );
-		}
-		$linenum     = $.;
-		$IsFromElsIf = 1;
-	}
 	
-	#print $linenum, "\t", $line, "--\n";
-	if ( $line =~ m/$Table_TYPE_PATTERN/o ) {
-	    my $ret_str = process_table_search( $1, $2 );
-		unless($ret_str eq '') {
-		    generateBp($linenum, $ret_str);
+	# bugfix for can not set bp on 'elif' line, set bp at next line.
+	if($key eq 'elif') {	
+		# fetch the first executable line
+		$new_line = fetchFisrtExecLine ($line);
+		$linenum = $.;
+		
+		if ($new_line =~ /^\s*(if|test|while)[^\w_]/o) {
+			# generate bp for table when met element_exist in switch
+			parse_conditon_table($1, $new_line);
+			
+		} elsif ( $BP_LVL >= 3 && $new_line =~ /^\s*return(.*)$/o ) {
+	        parse_statement_return($1);
+			
+	    } elsif ($new_line =~ /^\s*set\s+Glb_Best_Match\s*=/o) {
+			# generate bp for table when met best_match in set
+			parse_statement_table($new_line);
+
 		}
 	}
 
-	if ( $IsFromElsIf == 1 ) {
-	    $IsFromElsIf = 0;
-	    if (   $BP_LVL >= 3
-	        && $new_line =~ /^\s*return(.*)$/o )
-	    {
-	        parse_statement_return($1);
-	    }
+	if ( $line =~ m/$Table_TYPE_PATTERN/o ) {
+		my $ret_str = process_table_search( $1, $2 );
+		unless($ret_str eq '') {
+			generateBp($linenum, $ret_str);
+		}
 	}
 
 	return 0;
@@ -778,6 +796,7 @@ sub extensionBp {
 
 	genLineBp();
 	changeGlobal();
+	print OUTPUT "detach\n";					 
 }
 
 sub changeGlobal {
@@ -822,20 +841,20 @@ sub changeGlobalVarByValue {
 
 sub genLineBp {
 	my $count	= @CodePoint;
-	my $max		= 3000000;
-	my $offset1	= 0;
+	my $max		= $.;
+	my $offset1	= 1;
 	my $offset2	= 0;	
 	my $idx		= 0;
 
-	push(@CodePoint, $max);
-	while ($idx < $count) {
-		$offset1 = $CodePoint[$idx];
-		$offset2 = $CodePoint[$idx + 1];
-		genLineBpByOffset($offset1, $offset2);
+	#push(@CodePoint, $max);
+	#while ($idx < $count) {
+	#	$offset1 = $CodePoint[$idx];
+	#	$offset2 = $CodePoint[$idx + 1];
+	genLineBpByOffset($offset1, $max);
 		
 		# move on 2 steps
-		$idx = $idx + 2;
-	}
+	#	$idx = $idx + 2;
+	#}
 }
 
 sub genLineBpByOffset {

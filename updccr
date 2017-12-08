@@ -1,0 +1,24 @@
+#!/bin/sh
+# configure message
+
+ccri=11
+ccru=12
+ccrt=13
+msisdn=393470999107
+sgsn="010130037004"
+station_id="lte.vodafone.it"
+session_id="SI;12345678;12340001"
+
+form_msg="SPA_DIAMCL29H_7"
+form_sub="SPA_DIAMCL29H_3"
+
+echo "FORM=$frm_sub&CHG,index=\"1\",Sub_Value=\"$msisdn\",CHG!" >/tmp/msg.frm
+
+for idx in $ccri $ccru $ccrt
+do
+cat <<!eof >>/tmp/msg.frm
+FORM=$form_msg&CHG,index="$idx",CCR_Session_ID="$session_id",CCR_Dcca_Vendor_Specific_Avps_Bound.called_station_id="$station_id",CCR_Dcca_Vendor_Specific_Avps_Bound.sgsn_address="$sgsn",CHG!
+!eof
+done
+#cat /tmp/msg.frm
+echo -e "please run:\n\tldfrm /tmp/msg.frm"

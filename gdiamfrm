@@ -32,6 +32,7 @@ fi
 diamsymfile=/sn/sps/$diamcl/$diamcl.sym
 globalrc=`egrep "client global;rc$" $diamsymfile | awk -F\; '{print $1}'`
 diam_tbl=`egrep "CCR_Message_Variable_Tbl$" $diamsymfile | awk -F\; '{print $1}'`
+diam_sub_id=`egrep "CCR_Subscription_Id_Tbl$" $diamsymfile | awk -F\; '{print $1}'`
 diamcl_fsm_tbl=`psql -Uscncraft -At -c "select item from rcmenutbl where title like 'client fsm Diameter_Peer_FSM' and parent='$diamcl'"`
 diamcl_fsm_rk=`grep diam_client_access $diamsymfile | awk -F\; '{print $3}'`
 diamcl_fsm_seq=`psql -Uscncraft -At -c "select seq from $diamcl_fsm_tbl where $diamcl_fsm_rk='diam_key' limit 1"`
@@ -90,3 +91,9 @@ do
 		sed -i "s,$olddiam_tbl,$diam_tbl,g" $script
 	fi
 done
+
+if [ -f "BASEBINDIR/updccr" ]
+then
+	sed -i "s,SPA_DIAMCL29H_3,$diam_sub_id,g" $BASEBINDIR/updccr
+	sed -i "s,SPA_DIAMCL29H_7,$diam_tbl,g" $BASEBINDIR/updccr
+fi
