@@ -25,6 +25,8 @@
 # * ccr
 # 	a script that puts ccri/ccru/ccrt together, 
 # 	for tester running diameter ps call in one command
+# * updccr
+#       update ccr message in one command, instead of update in rcv 3 times
 # 
 # * ngini
 # * nginu
