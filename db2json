@@ -39,7 +39,7 @@ function gen_data_rec {
 	}
 	{
 		op = 1
-		data = "{\"_exist\": \""op"\", \"_name\": .*"name".*\""
+		data = "{\"_exist\": \""op"\", \"_name\": \".*"name".*\""
 	        for (i = 2; i < NF; i++) {
 	                gsub(QUOTE, "", $i)
 	                if (length($i) == 0) {

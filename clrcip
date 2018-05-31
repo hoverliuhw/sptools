@@ -1,0 +1,31 @@
+#!/bin/sh
+
+tempbpfile=/tmp/rstcip.bp
+tempsubshl=/tmp/rstcip.subshl
+
+spaname=`psql -Uscncraft -At -c "select span from spm_tbl where span like 'EPAY%'"`
+if [ -z $spaname ]
+then
+	echo "EPAY is not IS, exit"
+	exit 1
+fi
+
+cat <<!eof >$tempbpfile
+reset Glb_FG_UBD_Bucket_Info_tbl[]
+reset Glb_Group_Timer_Instance_Mapping_tbl[]
+reset LDAP_Calls_In_Progress_tbl[]
+reset Calls_In_Progress_tbl[]
+reset Calls_In_Progress_Counters_tbl[]
+reset Extend_CIPC_tbl[]
+reset Bundle_PTP_CIP_tbl[]
+reset Sync_In_Progress_tbl[]
+detach
+!eof
+
+cat <<!eof>$tempsubshl
+debug:spa=$spaname,client=all,source="$tempbpfile",ucl
+!eof
+
+subshl -F $tempsubshl 2>/dev/null
+rm $tempbpfile $tempsubshl
+

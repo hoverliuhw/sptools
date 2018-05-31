@@ -3,4 +3,10 @@ enwtpps=`psql -Uscncraft -At -c "select version_name from sa_name_map where spa_
 fc=`grep "^SPA_.*Feature_Configuration_tbl$" /sn/sps/$enwtpps/$enwtpps.sym |awk -F\; '{print $1}'`
 cus_id=`grep "Feature_Configuration_tbl.*Customer_Identifier" /sn/sps/$enwtpps/$enwtpps.sym | awk -F\; '{print $3}'`
 
-psql -Uscncraft -At -c "select $cus_id from $fc"
+echo Customer_Id: $(psql -Uscncraft -At -c "select $cus_id from $fc")
+
+nwtcom=`psql -Uscncraft -At -c "select version_name from sa_name_map where spa_base='NWTCOM'"`
+tv=`grep "^SPA_.*TimeView_tbl$" /sn/sps/$nwtcom/$nwtcom.sym |awk -F\; '{print $1}'`
+
+echo TimeZone: $(psql -Uscncraft -At -c "select indx from $tv")
+
