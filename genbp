@@ -90,9 +90,11 @@ our $Table_TYPE_PATTERN = '(element_exists|best_match|prefix_matches)\s*'.$Match
 our $IgnoreFunction =
 	'get_spa_process_status|clock|LDAP_Check_Account_Expiration|printable_hex_to_raw_string|counter|power|ftoi|element_exists';
 our $IgnoreSLLFunction = 
-	'Get_Day_ID|UnixTime_To_Date_TimeZone|Calculate_End_Date|Insert_Annc|map|Calculate_First_Day_Current_Period|Get_Call_Dynamic_Counter|Get_Call_Dynamic_Flag|Get_Call_Dynamic_String|Get_Call_Dynamic_Long_Counter|Get_Call_Dynamic_Float|Convert_Value_To_Text_String|Get_Total_Reserved_Bucket|Get_Total_Captured_Bucket|Get_Total_Refunded_Bucket|Parser_URL_Format|Diam_COSP_Exists_In_ExtCOSP|Need_Determine_Zone|Date_Format_Conversion|Fill_Text_Format|Get_Long_Length_Value_From_EPM|Process_PP|Process_Dot_To_Comma|find|Check_Lmt_VoLTE_On_No_DiamAllowed|Check_Applied_UBD_Counter|ALCC_Compare_Credit_With_Trigger|Compress_One_Digit_And_Filler';
+	'Get_Day_ID|UnixTime_To_Date_TimeZone|Calculate_End_Date|Insert_Annc|map|Calculate_First_Day_Current_Period|Get_Call_Dynamic_Counter|Get_Call_Dynamic_Flag|Get_Call_Dynamic_String|Get_Call_Dynamic_Long_Counter|Get_Call_Dynamic_Float|Convert_Value_To_Text_String|Get_Total_Reserved_Bucket|Get_Total_Captured_Bucket|Get_Total_Refunded_Bucket|Parser_URL_Format|Diam_COSP_Exists_In_ExtCOSP|Need_Determine_Zone|Date_Format_Conversion|Fill_Text_Format|Get_Long_Length_Value_From_EPM|Process_PP|Process_Dot_To_Comma|find|Check_Lmt_VoLTE_On_No_DiamAllowed|Check_Applied_UBD_Counter|ALCC_Compare_Credit_With_Trigger|Compress_One_Digit_And_Filler|Get_No_Counting_Timestamp_From_Prom_Info';
 our $ignoreTable =
 	'Local_Reset_Discount_Info_tbl|L_Diam_BOU_Index_tbl|L_SPI_UC_Cross_tbl|L_SPI_Ro_Info_tbl|L_SPI_PC_Related_Grp_Bkt_tbl';
+# Some built-in functions can be evaluated in return statement BP
+our $BuiltinFunc = 'client_cc_enum|substring|string|bit!or|any|bit!is_set|length|hex_value|counter_to_hex';
 # Skip_FSM_List is for performance issue, 
 our $Skip_FSM_List = 'INTER_ECS_FSM';
 
@@ -327,18 +329,22 @@ sub process_function_return {
 
         #special for invoke builtin function
         #Note: for current, can not add built-in function into breakpoint, so ignore it
-        #
-        $params = '"BP_LIMIT: ' . $1 . '"'
-          if ($params =~ /($IgnoreFunction)\s*\(/o);
+	my $para_temp = $params;
+	$para_temp =~ s/\b($BuiltinFunc)\s*\(//g;
+	if ($para_temp =~ /([a-zA-Z][!\w]*)\s*\(/o)
+	{
+		$params = '"BP_LIMIT: ' . $1 . '"';
+	}
+
         my $ret_res = $params;
         #skip return with a expression
         return ''	if ($params =~ m/\/+/o);
-		$ret_res = '"BP_Limit: Explicit indexed table"' if ($ret_res =~ m/\s*($explicit_indexed_tbl)/gi);
-		#support return without meaningful feature
-		$ret_res =~ s/^\s*$/\"BP_LIMIT: void\"/g;
-		$ret_res =~ s/;//g;
-		$ret_res =~ s/0\.0/0/g;
-		$ret_res =~ s/^float\((.*)\)$/$1/gi;
+	$ret_res = '"BP_Limit: Explicit indexed table"' if ($ret_res =~ m/\s*($explicit_indexed_tbl)/gi);
+	#support return without meaningful feature
+	$ret_res =~ s/^\s*$/\"BP_LIMIT: void\"/g;
+	$ret_res =~ s/;//g;
+	$ret_res =~ s/0\.0/0/g;
+	$ret_res =~ s/^float\((.*)\)$/$1/gi;
         return "\"".$mark{'return'}." ".$func_name." return: \",$ret_res";
     }
     return '';
@@ -627,7 +633,7 @@ sub parse_conditon_table {
 	}
 	
 	# bugfix for can not set bp on 'elif' line, set bp at next line.
-	if($key eq 'elif') {	
+	if($key eq 'elif' || $key eq 'if') {	
 		# fetch the first executable line
 		$new_line = fetchFisrtExecLine ($line);
 		$linenum = $.;
@@ -643,6 +649,9 @@ sub parse_conditon_table {
 			# generate bp for table when met best_match in set
 			parse_statement_table($new_line);
 
+		} elsif ( $new_line =~ /^\s*(else|elif)/o) {
+			# there is no executable line in if clause
+			return 0;
 		}
 	}
 
