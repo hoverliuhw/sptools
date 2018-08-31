@@ -27,6 +27,14 @@
 # 	for tester running diameter ps call in one command
 # * updccr
 #       update ccr message in one command, instead of update in rcv 3 times
+#
+# * chsub
+#	used for changing subscriber id in different cases, only for diameter related call
+#	e.g. ps, ngin, sms
+#	usage: chsub <msisdn>
+# * usu
+#	used for changing USU for each slice, so tester doesn't need to update by manual
+#	usage: usu -i <index> -t <time> -v <volume>
 # 
 # * ngini
 # * nginu
@@ -140,6 +148,7 @@
 # * gendb
 # 	generate RTDB files for a caselist, usage: gendb <caselist file>
 # 	note: request from Wang Yiping
+#
 # * gdiamfrm
 #	generate ps.frm, sms.frm, ngin.frm, and update ccru, ccrt, nginu, ngint
 #	usage: gdiamfrm <DIAMCL NAME>
@@ -155,6 +164,7 @@
 # * cpdgvx
 #	used for copy dg and vortex rule from automation dir to mcas
 # 	usage: cp this script to mcas, modify its dir and host ip, run it
+#       note: since old automation tool is obsoleted, so is this tool, just keep it for reference
 #
 # * audit
 #	used for sending audit command to EPPSA, no need copy and paste
@@ -182,7 +192,7 @@
 #
 # * frm2json
 # * db2json
-#	to convert frm file and rtdb data file to json format
+#	to convert frm file and rtdb data file to json format, which is used for sunit
 #
 # * readwebdb.py
 #	get spa data from webdb by customer name, 

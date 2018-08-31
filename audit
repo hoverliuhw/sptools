@@ -22,16 +22,32 @@ glb_rc_name=`psql -Uscncraft -At -c "select item from RCMENUTBL where title='ser
 hour=`date '+%H'`
 min=`date '+%M'`
 sec=`date '+%S'`
+
+hour=1$hour
+hour=$(($hour % 100))
+min=1$min
+min=$(($min % 100))
 if [ $sec -lt 55 ]
 then
-        min=$(($min + 1))
+    min=$(($min + 1))
 else
-        min=$(($min + 2))
+    min=$(($min + 2))
 fi
-min=$(($min % 60))
+
+if [ $min -ge 60 ]
+then
+    hour=$(($hour + 1))
+    min=$(($min % 60))
+fi
+hour=$(($hour % 24))
+if [ $hour -lt 10 ]
+then
+    hour="0$hour"
+fi
+
 if [ $min -lt 10 ]
 then
-        min="0$min"
+    min="0$min"
 fi
 
 echo "FORM=$glb_rc_name&CHG,SIM_Audit_Time=\"$hour$min\",CHG!" >$tmpfrm

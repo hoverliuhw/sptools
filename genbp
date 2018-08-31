@@ -51,24 +51,28 @@ our %GlobalVarValue = (
 	"Glb_DEBUG_LEVEL" => 9,
 	"Glb_Cache_Table_Clear_Interval" => 3600,
 	"Glb_Service_Measurement_Interval" => 3600,
+	"Glb_Service_Meas_Interval" => 3600,
 	"Glb_FGC_Check_Queue_Delay" => 10000,
 	"Glb_Check_Permanent_Instance_Interval" => 1000000
 );
 our %GlobalVarTitle = (
 	"Glb_Cache_Table_Clear_Interval" => "Do you want generate following BP to disable Cache_Table_Clear?",
 	"Glb_Service_Measurement_Interval" => "Do you want generate following BP to disable flood service measurement log?",
+	"Glb_Service_Meas_Interval" => "Do you want generate following BP to disable EPPSA flood service measurement log?",
 	"Glb_FGC_Check_Queue_Delay" => "Do you want generate following BP to disable flood output?",
 	"Glb_Check_Permanent_Instance_Interval" => "Do you want generate following BP to disable Check_Permanent_Instance?"
 );
 our %GlobalVarOpen = (
 	"Glb_DEBUG_LEVEL" => 1,
-	"Glb_Cache_Table_Clear_Interval" => 0,
-	"Glb_Service_Measurement_Interval" => 0,
+	"Glb_Cache_Table_Clear_Interval" => -1,
+	"Glb_Service_Measurement_Interval" => -1,
+	"Glb_Service_Meas_Interval" => -1,
 	"Glb_FGC_Check_Queue_Delay" => -1,
 	"Glb_Check_Permanent_Instance_Interval" => -1
 );
-our @GlobalVar = ("Glb_DEBUG_LEVEL", "Glb_Service_Measurement_Interval", "Glb_Cache_Table_Clear_Interval", "Glb_FGC_Check_Queue_Delay", "Glb_Check_Permanent_Instance_Interval");
-our @EPPSAGlbVar = ("Glb_FGC_Check_Queue_Delay", "Glb_Check_Permanent_Instance_Interval");
+our @GlobalVar = ("Glb_DEBUG_LEVEL", "Glb_Service_Measurement_Interval", "Glb_Service_Meas_Interval", "Glb_Cache_Table_Clear_Interval", "Glb_FGC_Check_Queue_Delay", "Glb_Check_Permanent_Instance_Interval");
+our @EPAYGlbVar = ("Glb_Service_Measurement_Interval", "Glb_Cache_Table_Clear_Interval");
+our @EPPSAGlbVar = ("Glb_Service_Measurement_Interval", "Glb_Service_Meas_Interval", "Glb_FGC_Check_Queue_Delay", "Glb_Check_Permanent_Instance_Interval");
 our @ALL_BP = ();
 our @CodePoint = (1);
 our @FSM_CodePoint = (1);
@@ -614,11 +618,13 @@ sub parsing {
 	#print "well done.\n";
 }
 
+our $AMA_Tbl = 'AMA_Record_Generation_tbl';
 sub parse_conditon_table {
 	my ($key, $line) = @_;
 	my $one_line_if_then = 0;
 	my $new_line = "";
 	my $linenum = $.;
+	my $orglinenum = $linenum;
 
 	trim_string($line);
 	$one_line_if_then = 1 if $line =~ /\s+then/o;
@@ -656,7 +662,10 @@ sub parse_conditon_table {
 	}
 
 	if ( $line =~ m/$Table_TYPE_PATTERN/o ) {
-		my $ret_str = process_table_search( $1, $2 );
+		# the AMA_Generation_tbl shoud be checked before if condition clause.
+		my $type = $1, $params = $2;
+		$linenum = $orglinenum if ( $params =~ /$AMA_Tbl/gi );
+		my $ret_str = process_table_search( $type, $params );
 		unless($ret_str eq '') {
 			generateBp($linenum, $ret_str);
 		}
@@ -857,7 +866,7 @@ sub changeGlobal {
 sub saveGlobalVar {
 	my ($var, $val) = @_;
 	
-	$GlobalVarOpen{$var} = 1;
+	$GlobalVarOpen{$var} = 0;
 	$GlobalVarValue{$var} = $val;
 }
 
@@ -899,7 +908,12 @@ sub judge_Src_Type {
 		foreach $var (@EPPSAGlbVar) {
 			saveGlobalVar($var, $GlobalVarValue{$var});
 		}
-	} 
+	} elsif ($type eq "EPAY") {
+		my $var = "";
+		foreach $var (@EPAYGlbVar) {
+			saveGlobalVar($var, $GlobalVarValue{$var});
+		}
+	}
 }
 
 sub genLineBp {

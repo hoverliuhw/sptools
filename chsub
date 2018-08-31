@@ -1,0 +1,27 @@
+#!/bin/sh
+# this script is to specify diameter msisdn
+# so that it is easier to run different cases with different msisdn
+# currently, it can only support one diameter client, e.g.
+# 	DIAMCL29B, DIAMCL173 can't be installed on same machine at same time
+#
+#	Liu Hongwei
+#	2018.7.31
+
+if [ $# -eq 0 ]
+then
+    echo "change diameter msisdn: chsub <sub_id>"
+    exit 1
+fi
+sub_id=$1
+tmpfrm="/tmp/change_diam_sub.frm"
+diamcl=$(psql -Uscncraft -At -c "select span from spa_tbl where span like 'DIAMCL%' limit 1")
+sub_tbl=$(psql -Uscncraft -At -c "select item from rcmenutbl where title='client global rc table CCR_Subscription_Id_Tbl' and parent='$diamcl'")
+
+cat <<!eof >$tmpfrm
+FORM=$sub_tbl&CHG,index="1",Sub_Value="$sub_id",CHG!
+!eof
+
+ldfrm $tmpfrm
+echo "changed diameter msisdn to $sub_id"
+rm $tmpfrm
+
