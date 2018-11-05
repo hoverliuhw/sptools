@@ -618,7 +618,6 @@ sub parsing {
 	#print "well done.\n";
 }
 
-our $AMA_Tbl = 'AMA_Record_Generation_tbl';
 sub parse_conditon_table {
 	my ($key, $line) = @_;
 	my $one_line_if_then = 0;
@@ -639,7 +638,7 @@ sub parse_conditon_table {
 	}
 	
 	# bugfix for can not set bp on 'elif' line, set bp at next line.
-	if($key eq 'elif' || $key eq 'if') {	
+	if($key eq 'elif') {	
 		# fetch the first executable line
 		$new_line = fetchFisrtExecLine ($line);
 		$linenum = $.;
@@ -655,17 +654,11 @@ sub parse_conditon_table {
 			# generate bp for table when met best_match in set
 			parse_statement_table($new_line);
 
-		} elsif ( $new_line =~ /^\s*(else|elif)/o) {
-			# there is no executable line in if clause
-			return 0;
 		}
 	}
 
 	if ( $line =~ m/$Table_TYPE_PATTERN/o ) {
-		# the AMA_Generation_tbl shoud be checked before if condition clause.
-		my $type = $1, $params = $2;
-		$linenum = $orglinenum if ( $params =~ /$AMA_Tbl/gi );
-		my $ret_str = process_table_search( $type, $params );
+		my $ret_str = process_table_search( $1, $2 );
 		unless($ret_str eq '') {
 			generateBp($linenum, $ret_str);
 		}
