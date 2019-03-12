@@ -1,9 +1,13 @@
 #!/bin/sh
+# load bp files on local or remote machines
+# author: Liu Hongwei
+# created on 2016
+# enhanced on 2019
 
 if [ $# = 0 ]
 then
 	cat <<!
-	usage: ./ldbp.sh -[lr] <bp file in absolute path>
+	usage: ./ldbp.sh -l [ -r <remote ip> ] <bp file in absolute path>
 !
 	exit 1
 	
@@ -12,7 +16,7 @@ local=""
 remote=""
 tmpsubshl="/tmp/temp.subshl"
 
-while getopts lr option
+while getopts lr: option
 do
 	case $option in
 	l)
@@ -20,6 +24,7 @@ do
 		;;
 	r)
 		remote="yes"
+                remote_host=$OPTARG
 		;;
 	\?)
 		echo "can't handle option $option" >&2
@@ -27,7 +32,8 @@ do
         esac
 done
 
-shift `expr $OPTIND - 1`
+#shift `expr $OPTIND - 1`
+shift $(($OPTIND - 1))
 bpfile=$1 # must be in absolute path
 echo $bpfile
 
@@ -53,22 +59,27 @@ fi
 
 if [ ! -z "$remote" ]
 then
-	ip="135.252.167.235"
-	username=ainet
-	passwd=ainet1
-	/usr/bin/expect -c "
-                spawn ssh $username@$ip
-                expect {
-                "*assword:" {
-                        send \"$passwd\n\"
-                        expect \"*-> \"
-                        send \"echo 'debug:spa=$spaname,client=all,source=\\\"$bpfile\\\",ucl' >$tmpsubshl\n\"
-                        expect \"*-> \"
-                        # send \"subshl -f /u/ainet/hongwehl/bin/print.subshl\n\"
-                        send \"subshl -F $tmpsubshl\n\"
-                        expect \"*-> \"
-                }
+    if [ -z "$remote_host" ]
+    then
+        echo "please input remote host ip"
+        exit 1
+    fi
+
+    ip="$remote_host"
+    username=ainet
+    passwd=ainet1
+    /usr/bin/expect -c "
+    spawn ssh $username@$ip
+         expect {
+          "*assword:" {
+               send \"$passwd\n\"
+               expect \"*-> \"
+               send \"echo 'debug:spa=$spaname,client=all,source=\\\"$bpfile\\\",ucl' >$tmpsubshl\n\"
+               expect \"*-> \"
+               send \"subshl -F $tmpsubshl\n\"
+               expect \"*-> \"
+          }
         }
-        " #>/dev/null
-	echo "finish loading $bpfile remotely"
+    " #>/dev/null
+    echo "finish loading $bpfile remotely on $ip"
 fi

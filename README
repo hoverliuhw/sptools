@@ -172,10 +172,13 @@
 # * aiaudit
 #	used for sending ai rtdb audit command to EPPSA, no need copy and paste
 #
+# * syaudit
+#	used for sending syaudit command to EPPSA, no need copy and paste
+#
 # * ckcip
 #	used for ckecking cip info in EPAY, before using it, need quit debug mode of EPAY
 #
-# * ldbp.sh
+# * ldbp
 #	used for loading bp during case run, it supports load bp on a remote host, this request is from a VFIE OLH case
 #	this script is not commonly used, only for reference
 #
