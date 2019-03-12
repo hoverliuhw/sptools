@@ -1,0 +1,62 @@
+#!/bin/sh
+# this script is to send audit command
+
+CEPEXEC="/sn/cr/cepexec"
+tmpfrm="/tmp/audit.frm"
+rctbl="SERVER_IMOM"
+rcfield="Server_IMOM_Access_Key"
+spaname=`psql -Uscncraft -At -c "select span from spm_tbl where span like 'EPPSA%'"`
+
+if [ -z "$spaname" ]
+then
+	echo "EPPSA SPA is NOT in IS state"
+	exit 1
+fi
+
+sqltbl=`grep $rctbl /sn/sps/$spaname/$spaname.sym | awk -F\; '{print $1}'`
+sqlfield=`grep $rcfield /sn/sps/$spaname/$spaname.sym | awk -F\; '{print $3}'`
+rk=`psql -Uscncraft -At -c "select $sqlfield from $sqltbl"`
+
+glb_rc_name=`psql -Uscncraft -At -c "select item from RCMENUTBL where title='server global rc' and parent='$spaname'"`
+
+hour=`date '+%H'`
+min=`date '+%M'`
+sec=`date '+%S'`
+
+hour=1$hour
+hour=$(($hour % 100))
+min=1$min
+min=$(($min % 100))
+if [ $sec -lt 55 ]
+then
+    min=$(($min + 1))
+else
+    min=$(($min + 2))
+fi
+
+if [ $min -ge 60 ]
+then
+    hour=$(($hour + 1))
+    min=$(($min % 60))
+fi
+hour=$(($hour % 24))
+if [ $hour -lt 10 ]
+then
+    hour="0$hour"
+fi
+
+if [ $min -lt 10 ]
+then
+    min="0$min"
+fi
+
+echo "FORM=$glb_rc_name&CHG,Sy_Audit_Time=\"$hour$min\",CHG!" >$tmpfrm
+ldfrm $tmpfrm
+
+cmd="snd:text=\"alw:prepaid,audit=SY\",RK=\"$rk\""
+echo $cmd
+$CEPEXEC SEND_TEXT "$cmd"
+rc=$?
+echo "audit time: $hour$min, send result: $rc"
+
+rm $tmpfrm

@@ -22,10 +22,10 @@
 #################################################
 
 # remote host information, no need update
-remoteip="135.242.106.115"
-remoteuser=ainet
-remotepasswd=ainet1
-remotedir="/home/ainet/hongwehl/spvm53/bin"
+remoteip="135.242.106.65"
+remoteuser=hongwehl
+remotepasswd=hongwehl
+remotedir="/home/hongwehl/spvm53/bin"
 
 # local host(working mCAS) information, update per user's need
 rootpasswd="r00t"

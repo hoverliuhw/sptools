@@ -219,4 +219,4 @@
 # * setuptools.sh
 #	used for copy and link all above scripts
 #	usage: cp this script to mcas, modify its base dir, then run it
-#	e.g. scp ainet@135.242.106.115:/home/ainet/hongwehl/spvm53/bin/setuptools.sh .;chmod 755 setuptools.sh;./setuptools.sh
+#	e.g. scp hongwehl@135.242.106.65:/home/hongwehl/spvm53/bin/setuptools.sh .;chmod 755 setuptools.sh;./setuptools.sh
