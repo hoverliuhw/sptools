@@ -1,5 +1,7 @@
 #!/bin/sh
-# configure message
+# configure ps message
+# this is only for vodafone bound ps call
+# for 3gpp bound, please refer to customers like GOM, BSNL, THURAYA
 
 session_id="SI;12345678;12340001"
 ccri=11
@@ -11,6 +13,7 @@ para_vfi=(393470999107 "010130037004" "lte.vodafone.it")
 para_vfuk=(447469979955 "212183144242" "pp.vodafone.co.uk")
 para_vfgr=(306944900340 "213249062000" "internet.vodafone.gr")
 para_vfie=(353870999127 "213233130056" "hs.vodafone.ie")
+para_vfq=(97470899843 "194020091224" "web.vodafone.com.qa")
 
 # please specify customer in variable "para"
 para=(${para_vfi[@]})

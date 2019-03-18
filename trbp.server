@@ -1,0 +1,4 @@
+trace:proc=SPANAME,mode=1178&1179,machine=0-0-1,ucl
+trace:proc=SPANAME,mode=1178&1179,machine=0-0-9,ucl
+debug:spa=SPANAME,machine=0-0-1,source="/u/ainet/hongwehl/src/SPANAME.bp",ucl
+debug:spa=SPANAME,machine=0-0-9,source="/u/ainet/hongwehl/src/SPANAME.bp",ucl
