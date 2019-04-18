@@ -13,7 +13,7 @@ timer=15
 MGTS_DATA=/home/catapult/USERS/$mgts_user/datafiles
 
 /usr/bin/expect -c "
-	set timeout 60
+	set timeout 120
 
 	spawn telnet $p250alu
 	expect "*login:" {
@@ -48,10 +48,10 @@ MGTS_DATA=/home/catapult/USERS/$mgts_user/datafiles
 			send \"networkExecute $assign_name -download\n\"
 			expect \"*datafiles> \"
 
-			send \"shelfPASM EE -node SSP -machine \\\"$state_name State Machine\\\" -run -log $MGTS_DATA/$state_name.mgts.runlog\n\"
+			send \"shelfPASM EE -node SSP -machine \\\"$state_name State Machine\\\" -run -wait -log $MGTS_DATA/$state_name.mgts.runlog\n\"
 			expect \"*datafiles> \"
 
-			send \"sleep $timer\n\"
+			send \"sleep 1\n\"
 			expect \"*datafiles> \"
 
 			send \"pkill -u $mgts_user passThru\n\"

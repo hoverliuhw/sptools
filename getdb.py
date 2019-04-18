@@ -26,6 +26,7 @@ def usage():
 	 	1 - AI_RTDB
 		2 - Counter_RTDB
 		3 - SGL_RTDB
+		4 - SY_RTDB
 	e.g. getdb.py debuglog EPAY29H.src 0 
 	''')
 	sys.exit(1)
@@ -76,7 +77,7 @@ def write_datafile(datafile, data_str):
 if len(sys.argv) < 4:
 	usage()
 
-rtdb_type_list = ('SIM_RTDB', 'AI_RTDB', 'Counter_RTDB', 'SGL_RTDB')
+rtdb_type_list = ('SIM_RTDB', 'AI_RTDB', 'Counter_RTDB', 'SGL_RTDB', 'SY_RTDB')
 
 logfile = sys.argv[1]
 srcfile = sys.argv[2]
@@ -126,6 +127,8 @@ elif rtdb_type == 'Counter_RTDB':
 	db_name_line = 'set GLB_Counter_RTDB_Table_Name  = "CTRTDB'
 elif rtdb_type == 'SGL_RTDB':
 	db_name_line = 'set GLB_SGL_RTDB_Table_Name '
+elif rtdb_type == 'SY_RTDB':
+	db_name_line = 'set GLB_SY_RTDB_Table_Name '
 else:
 	print(rtdb_type + ' does not support')
 	sys.exit(1)
