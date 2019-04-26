@@ -162,8 +162,13 @@ class WebDBPageParser(HTMLParser):
 
         diamfsm_schema = WebDBPageParser.getsqlresult('''psql -Uscncraft -A -c "select * from {0}"'''.format(sqldiamfsm)).split('|')
         updfsm = '''psql -Uscncraft -At -c "update {0} set {1}='DM4', {2}='318'"'''.format(sqldiamfsm, diamfsm_schema[4], diamfsm_schema[5])
-        insertda = '''psql -Uscncraft -At -c "insert into {0} values ('DIAMCL','4','317','Y','version2.clci.ipc@vodafone.com')"'''.format(sqlda)
         deleteavp = '''psql -Uscncraft -At -c "truncate table {0}"'''.format(sqldiamavp)
+
+        rel = epay[4:]
+        if rel.isdigit() and int(rel) >= 183:
+            insertda = '''psql -Uscncraft -At -c "insert into {0} values ('DIAMCL','4',';',';',';','1','Y','version2.clci.ipc@vodafone.com',';','N','3:1:2','L10:L10:L2')"'''.format(sqlda)
+        else:
+            insertda = '''psql -Uscncraft -At -c "insert into {0} values ('DIAMCL','4','317','Y','version2.clci.ipc@vodafone.com')"'''.format(sqlda)
 
         sqllist = open(realpath + "/sql.list", 'a')
         sqllist.write(updfsm + os.linesep)
@@ -215,6 +220,8 @@ def usage():
     ''')
 
 if __name__ == '__main__':
+    socket.setdefaulttimeout(600)
+    os.environ['http_proxy'] = "135.251.33.15:80"
     if len(sys.argv) == 1:
          usage()
          sys.exit(1)
@@ -279,7 +286,9 @@ if __name__ == '__main__':
     spa_parser.feed(html)
 
     for spaurl in spa_parser.spa_data_url_list:
-        downloadpage = urllib2.urlopen(spaurl).read()
+        # downloadpage = urllib2.urlopen(spaurl).read()
+        downloadhandler = urllib2.urlopen(spaurl,data=None,timeout=600)
+        downloadpage = downloadhandler.read()
         downloader.feed(downloadpage)
 
     orig_hostname = db_name[0 : -13]
