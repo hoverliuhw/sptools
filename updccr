@@ -1,26 +1,57 @@
 #!/bin/sh
 # configure ps message
 # this is only for vodafone bound ps call
-# for 3gpp bound, please refer to customers like GOM, BSNL, THURAYA
+# for VF bound, usually, need update below parameters:
+#     msg.CCR_Dcca_Vendor_Specific_Avps_Bound.present_called_station_id
+#     msg.CCR_Dcca_Vendor_Specific_Avps_Bound.called_station_id
+#     msg.CCR_Dcca_Vendor_Specific_Avps_Bound.sgsn_address
+#     CCR_Subscription_Id_Tbl.Sub_Value
+# for 3gpp bound, we have customers like GOM, BSNL, THURAYA, TOGOCEL, CAMGSM
+#     usually, need update below parameters:
+#     msg.CCR_Dcca_Vendor_Specific_Avps_Bound.present_called_station_id
+#     msg.CCR_Dcca_Vendor_Specific_Avps_Bound.called_station_id
+#     msg.CCR_Dcca_Vendor_Specific_Avps_Bound.present_rfro_sgsn_address
+#     msg.CCR_Dcca_Vendor_Specific_Avps_Bound.rfro_sgsn_address_version="iave_ip_v4"
+#     msg.CCR_Dcca_Vendor_Specific_Avps_Bound.rfro_sgsn_address
+#     CCR_Subscription_Id_Tbl.Sub_Value
 
 session_id="SI;12345678;12340001"
 ccri=11
 ccru=12
 ccrt=13
 
+# vf customer
 # msisdn sgsn station_id
 para_vfi=(393470999107 "010130037004" "lte.vodafone.it")
 para_vfuk=(447469979955 "212183144242" "pp.vodafone.co.uk")
 para_vfgr=(306944900340 "213249062000" "internet.vodafone.gr")
 para_vfie=(353870999127 "213233130056" "hs.vodafone.ie")
 para_vfq=(97470899843 "194020091224" "web.vodafone.com.qa")
+para_vfnz=(64210591025 "010054008002" "www.vodafone.net.nz")
+para_vfgh=(233202007007 "080087092022" "spbrowse")
+para_vfp=(8610000001234 "213030040018" "corporate.vodafone.pt")
+para_vfhu=(36702491082 "080244100116" "internet.vodafone.net")
+para_vfcz=(420773289510 "217077165000" "gprst.4sacc3")
+
+# 3gpp customer
+# msisdn sgsn station_id service_context_id
+para_gom=(35679376006 "087.252.158.000" "v-gointernet-local" "v1.ggsn.6.32251@3gpp.org") # need extra config for zone info, such as mnc mcc
+para_camgsm=(85511334449 "203.144.090.081" "ccbmate" "6.32251@3gpp.org")
+para_togo=(22893990070 "197.148.125.002" "pcrf.togocel" "32251@3gpp.org")
+para_bsnl=(919440196168 "218.248.72.40" "bsnlnet" "32251@3gpp.org") # take south zone as example
 
 # please specify customer in variable "para"
+bound="vf" # vf or 3gpp
 para=(${para_vfi[@]})
 
 msisdn=${para[0]}
 sgsn=${para[1]}
 station_id=${para[2]}
+service_context="version2.clci.ipc@vodafone.com"
+if [ ! $bound = "vf" ]
+then
+    service_context=${para[3]}
+fi
 
 form_msg=$(psql -Uscncraft -At -c "select item from rcmenutbl where title='client global rc table CCR_Message_Variable_Tbl' limit 1")
 form_sub=$(psql -Uscncraft -At -c "select item from rcmenutbl where title='client global rc table CCR_Subscription_Id_Tbl' limit 1")
@@ -31,9 +62,16 @@ echo "FORM=$form_sub&CHG,index=\"1\",Sub_Value=\"$msisdn\",CHG!" >/tmp/msg.frm
 
 for idx in $ccri $ccru $ccrt
 do
-cat <<!eof >>/tmp/msg.frm
-FORM=$form_msg&CHG,index="$idx",CCR_Session_ID="$session_id",CCR_Dcca_Vendor_Specific_Avps_Bound.called_station_id="$station_id",CCR_Dcca_Vendor_Specific_Avps_Bound.sgsn_address="$sgsn",CHG!
+    if [ $bound = "vf" ]
+    then
+        cat <<!eof >>/tmp/msg.frm
+FORM=$form_msg&CHG,index="$idx",CCR_Session_ID="$session_id",CCR_Service_Context_Identifier="$service_context",CCR_Dcca_Vendor_Specific_Avps_Bound.called_station_id="$station_id",CCR_Dcca_Vendor_Specific_Avps_Bound.sgsn_address="$sgsn",CHG!
 !eof
+    else
+        cat <<!eof >>/tmp/msg.frm
+FORM=$form_msg&CHG,index="$idx",CCR_Session_ID="$session_id",CCR_Service_Context_Identifier="$service_context",CCR_Dcca_Vendor_Specific_Avps_Bound.present_called_station_id="true",CCR_Dcca_Vendor_Specific_Avps_Bound.called_station_id="$station_id",CCR_Dcca_Vendor_Specific_Avps_Bound.present_rfro_sgsn_address="true",CCR_Dcca_Vendor_Specific_Avps_Bound.rfro_sgsn_address_version="iave_ip_v4",CCR_Dcca_Vendor_Specific_Avps_Bound.rfro_sgsn_address="$sgsn",CHG!
+!eof
+    fi
 done
 
 echo -e "please run:\n\tldfrm /tmp/msg.frm"

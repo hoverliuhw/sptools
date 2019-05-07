@@ -139,13 +139,13 @@
 # * keygen
 #	generate msisdn number for a case tid, e.g. keygen dn1234
 # 
-# * ldcase
+# * ldcase -- deleted
 # 	load RTDB files per case, usage: ldcase <tid>, 
 # 	note: request from Wang Yiping
-# * bkdb
+# * bkdb -- deleted
 # 	backup RTDB file per case, usage: bkdb <tid>
 # 	note: request from Wang Yiping
-# * gendb
+# * gendb -- deleted
 # 	generate RTDB files for a caselist, usage: gendb <caselist file>
 # 	note: request from Wang Yiping
 #
@@ -206,10 +206,14 @@
 #	a aethos simulator, which can be used as tcp/smpp notification server, or as rms server
 #	usage: aethos.py [-h] [-p port] [-r] [-s] [-t] [--help] [--port=<port>] [--rms] [--smpp] [--tcp]
 #
-# * genscc.sh
+# * genscc.sh -- deleted, replaced by notification.sh
 #	configure notification server, which need configure SCC table and SMPP FSM
 #	usage: genscc.sh, it will generate config_notif.sh, then run config_notif.sh
 #       note: not so useful :)
+#
+# * notification.sh
+#       generate notification configuration scripts, such as notification.sql, and scc.frm
+#       need ./notification.sql and ldfrm scc.frm after running it
 #
 # * ckop
 #       check manual operations(include commands using /sn/cr/cepexec) in OMlog

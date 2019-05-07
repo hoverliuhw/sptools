@@ -38,6 +38,15 @@ diamcl_fsm_rk=`grep diam_client_access $diamsymfile | awk -F\; '{print $3}'`
 diamcl_fsm_seq=`psql -Uscncraft -At -c "select seq from $diamcl_fsm_tbl where $diamcl_fsm_rk='diam_key' limit 1"`
 
 version=`psql -Uscncraft -At -c "select version_name from SA_NAME_MAP where spa_base='ENWTPPS'" | sed "s,ENWTPPS,,g"`
+new_da="false"
+ret=`expr match $version "[0-9][0-9]*$"`
+if [ $ret -gt 0 ]
+then
+    if [ $version -ge 183 ]
+    then
+        new_da="true"
+    fi
+fi
 #echo version is $version
 epayname=EPAY$version
 epaysymfile=/sn/sps/$epayname/$epayname.sym
@@ -50,9 +59,16 @@ isDAExist=`psql -Uscncraft -At -c "select count(*) from $da_tbl where INDX_1='DI
 
 if [ $isDAExist -eq 0 ]
 then
-	cat <<!eof >$DIAMBASEFRM
+        if [ $new_da = "false" ]
+        then
+	    cat <<!eof >$DIAMBASEFRM
 FORM=$da_tbl&NEW,index.Diameter_Client_Identifier="DIAMCL",index.Application_ID="4",Diameter_Client_Service_ID="375",Diameter_Client_Service_Support="Y",Service_Context_ID="version2.clci.ipc@vodafone.com",NEW!
 !eof
+        else
+	    cat <<!eof >$DIAMBASEFRM
+FORM=$da_tbl&NEW,index.Diameter_Client_Identifier="DIAMCL",index.Application_ID="4",index.Diameter_Client_Identifier_1=";",index.Diameter_Client_Identifier_2=";",index.Diameter_Client_Identifier_3=";",Diameter_Client_Service_ID="1",Diameter_Client_Service_Support="Y",Service_Context_ID="6.32251@3gpp.org",Delimeter=";",Flexible_Session_ID="N",New_Format="3:1:2",Partition_Length_Value="L10:L10:L2",NEW!
+!eof
+        fi
 fi
 
 if [ ! -z "$diamcl_fsm_seq" ]
@@ -70,17 +86,33 @@ FORM=$epay_diam_fsm_tbl&CHG,sequence="$epay_diam_fsm_seq",GETDATA,Routing_String
 fi
 #/cs/sn/cr/cepexec RCV_TEXT "RCV:TEXT,SPA" <$DIAMBASEFRM
 
-cat <<!eof >$SMSFRM
+if [ $new_da = "false" ]
+then
+    cat <<!eof >$SMSFRM
 FORM=$da_tbl&CHG,index.Diameter_Client_Identifier="DIAMCL",index.Application_ID="4",Service_Context_ID="32274@3gpp.org",CHG!
 !eof
 
-cat <<!eof >$PSFRM
+    cat <<!eof >$PSFRM
 FORM=$da_tbl&CHG,index.Diameter_Client_Identifier="DIAMCL",index.Application_ID="4",Service_Context_ID="version2.clci.ipc@vodafone.com",CHG!
 !eof
 
-cat <<!eof >$NGINFRM
+    cat <<!eof >$NGINFRM
 FORM=$da_tbl&CHG,index.Diameter_Client_Identifier="DIAMCL",index.Application_ID="4",Service_Context_ID="version1.nginas.32260@3gpp.org",CHG!
 !eof
+
+else
+    cat <<!eof >$SMSFRM
+FORM=$da_tbl&CHG,index.Diameter_Client_Identifier="DIAMCL",index.Application_ID="4",index.Diameter_Client_Identifier_1=";",index.Diameter_Client_Identifier_2=";",index.Diameter_Client_Identifier_3=";",Service_Context_ID="32274@3gpp.org",CHG!
+!eof
+
+    cat <<!eof >$PSFRM
+FORM=$da_tbl&CHG,index.Diameter_Client_Identifier="DIAMCL",index.Application_ID="4",index.Diameter_Client_Identifier_1=";",index.Diameter_Client_Identifier_2=";",index.Diameter_Client_Identifier_3=";",Service_Context_ID="version2.clci.ipc@vodafone.com",CHG!
+!eof
+
+    cat <<!eof >$NGINFRM
+FORM=$da_tbl&CHG,index.Diameter_Client_Identifier="DIAMCL",index.Application_ID="4",index.Diameter_Client_Identifier_1=";",index.Diameter_Client_Identifier_2=";",index.Diameter_Client_Identifier_3=";",Service_Context_ID="version1.nginas.32260@3gpp.org",CHG!
+!eof
+fi
 
 for ccr in ccru ccrt nginu ngint
 do
@@ -91,9 +123,3 @@ do
 		sed -i "s,$olddiam_tbl,$diam_tbl,g" $script
 	fi
 done
-
-if [ -f "BASEBINDIR/updccr" ]
-then
-	sed -i "s,SPA_DIAMCL29H_3,$diam_sub_id,g" $BASEBINDIR/updccr
-	sed -i "s,SPA_DIAMCL29H_7,$diam_tbl,g" $BASEBINDIR/updccr
-fi
