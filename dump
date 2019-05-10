@@ -1,0 +1,68 @@
+#!/bin/sh
+# A lightweight dumpall tool, which is used to dump spa data
+# It can dump single spa, or all spas data
+#
+# usage: ./dump <spa name> | all
+# note:
+#     when dumping single spa data, there is no parallel in case there are 
+#     too many psql clients at the same time
+#     
+#     Liu Hongwei
+#     2019.05.09
+
+spaname=$1
+DUMP=$0
+
+if [ $# = 0 ]
+then
+    echo "usage: ./dump <spa name> | all"
+    exit 1
+fi
+
+spaname=$1
+
+# deal with "all" option
+if [ "$spaname" = "all" ]
+then
+    for spa in $(psql -Uscncraft -At -c "select span from spa_tbl")
+    do
+        $DUMP $spa &
+    done
+
+    while [ ! -z "$(ps -ef | grep "$DUMP" | egrep -v 'grep|all')" ]
+    do
+        sleep 5
+    done
+
+    echo "Finished dump all spa data"
+    exit 0
+fi
+
+# check if spa installed
+isInstalled=$(psql -Uscncraft -At -c "select span from spa_tbl where span='$spaname'")
+if [ -z "$isInstalled" ]
+then
+        echo "SPA $spaname is NOT installed on this machine"
+        exit 1
+fi
+
+# deal with single spa table by table in sequential
+>$spaname.sql
+for tbl in $(psql -Uscncraft -At -c "select item from RCMENUTBL where parent='$spaname'")
+do
+    echo "dumping $tbl"
+    echo "TRUNCATE TABLE $tbl;" >> $spaname.sql
+
+    pg_dump -Uscncraft -O -a --insert -t $tbl -f $tbl.sql
+
+    grep "^INSERT "  $tbl.sql >> $spaname.sql
+    rm $tbl.sql
+done
+
+# add file header to sql files
+sed -i "1ipsql -h pglocalhost -U scncraft <<!eof\nBEGIN;" $spaname.sql
+sed -i "\$aCOMMIT;\n!eof" $spaname.sql
+chmod 755 $spaname.sql
+
+# backup sym file, for future upgrade
+cp /sn/sps/$spaname/$spaname.sym .
