@@ -45,12 +45,12 @@ class RMSHandler(BaseRequestHandler):
     var = {
         'GP.Send_Provider_ID_In_External_RCMS': False,
         'CP.Send_Service_Provider_In_External_RCMS': False,
-        'FF.RCMS_32bit_SN': True, # BSNL is True, GOM is False
-        'FC.VAS_Scratch_Card_Feature_Enable_Flag': False, # GOM is True
-        'FC.Send_Combined_PIN_And_RCN_For_Val': True, # BSNL is True, GOM is False
-        'FC.Two_Stage_Validation_For_Scratch_Card': False,
-        'RRI_Prefix': 'UPE1',
-        'Customer': 'BSNL'
+        'FF.RCMS_32bit_SN': False, # BSNL is True, GOM, CAMGSM is False
+        'FC.VAS_Scratch_Card_Feature_Enable_Flag': True, # GOM, CAMGSM is True
+        'FC.Send_Combined_PIN_And_RCN_For_Val': False, # BSNL is True, GOM, CAMGSM is False
+        'FC.Two_Stage_Validation_For_Scratch_Card': True,
+        'RRI_Prefix': 'SCRATCH1',
+        'Customer': ''
     }
 
     # AethosOpPrefix and AethosResultPrefix mapping
@@ -103,12 +103,12 @@ class RMSHandler(BaseRequestHandler):
     # response parameters, such as recharge amount, delay timer(in sec.)
     resp_var = {
         'validationResult': validate_result_code['afr_success'],
-        'amount': 10000,
+        'amount': 1000000,
         'serial_no_32': '00000000000000001200559400000065',
-        'serial_no_16': '1200559400000065',
+        'serial_no_16': '5315976452' + '\000'*6,
         'customer': var['Customer'],
         'card_type': var['RRI_Prefix'],
-        'face_value': 10000,
+        'face_value': 1000000,
         'delay': 0
     }
 
@@ -122,10 +122,11 @@ class RMSHandler(BaseRequestHandler):
                 AethosOpPrefix = data[0 : 3]
                 printable_opcode = AethosOpPrefix.encode('hex')
                 if AethosOpPrefix == "002A11".decode('hex'):
-                    printable_opcode = printable_opcode + ' (* Cancel *)'
-
-                if AethosOpPrefix == "00350F".decode('hex'):
+                    printable_opcode = printable_opcode + ' (* Card Cancel *)'
+                elif AethosOpPrefix == "00350F".decode('hex'):
                     printable_opcode = printable_opcode + ' (* Card Reservation *)'
+                else:
+                    printable_opcode = printable_opcode + ' (* Card Recharge *)'
 
                 print('*** Receive request, OpCode: %s' % printable_opcode)
 
@@ -137,11 +138,11 @@ class RMSHandler(BaseRequestHandler):
                 time.sleep(self.resp_var['delay'])
                 self.request.sendall(resp)
             except Exception, ex:
-                traceback.print_exc()
+                # traceback.print_exc()
                 break
 
     def parse_card(self, data):
-        # AethosOpPrefix:     3 bytes,
+        # AethosResultPrefix:     3 bytes,
         # len_account_id:     1 byte,
         # account_id:         8 bytes,
         # card_no_and_pin:    30 bytes
@@ -153,7 +154,7 @@ class RMSHandler(BaseRequestHandler):
         Send_Provider_ID_In_External_RCMS = self.var['GP.Send_Provider_ID_In_External_RCMS']
         Send_Service_Provider_In_External_RCMS = self.var['CP.Send_Service_Provider_In_External_RCMS']
         RCMS_32bit_SN = self.var['FF.RCMS_32bit_SN']
-        VAS_Scratch_Card_Feature_Enable_Flag = self.var['FC.VAS_Scratch_Card_Feature_Enable_Flag']
+        VAS_Scratch_Card_Feature = self.var['FC.VAS_Scratch_Card_Feature_Enable_Flag']
         Send_Combined_PIN_And_RCN_For_Val = self.var['FC.Send_Combined_PIN_And_RCN_For_Val']
 
         len_account_id = int(data[3].encode('hex'), 16)
@@ -176,7 +177,7 @@ class RMSHandler(BaseRequestHandler):
             # written by referring to surepay code, not tested
             len_card = int(data[12].encode('hex'), 16)
             card = data[13 : 21].encode('hex')
-            cardno = card_no[0 : len_card]
+            cardno = card[0 : len_card]
 
             # provider id occupies 11 bytes, no need to decode
             provider_id = data[21 : ].replace('\000', '')
@@ -187,7 +188,7 @@ class RMSHandler(BaseRequestHandler):
             # written by referring to surepay code, not tested
             len_card = int(data[12].encode('hex'), 16)
             card = data[13 : 21].encode('hex')
-            cardno = card_no[0 : len_card]
+            cardno = card[0 : len_card]
 
             # service provider occupies 8 bytes, currently is empty, so all are '\000'
             service_provider = data[21 : ].replace('\000', '')
@@ -198,28 +199,32 @@ class RMSHandler(BaseRequestHandler):
             # GOM, cardno should occupy 8 bytes, padded with '\000'
             len_card = int(data[12].encode('hex'), 16)
             card = data[13 : ].encode('hex')
-            cardno = card_no[0 : len_card]
+            cardno = card[0 : len_card]
             print('''            * Account ID: \t{0} 
             * Card ID: \t{1}\n'''.format(account_id, cardno))
 
     def response(self, data):
+        # AethosOpPrefixResponse: 3 bytes
         # validationResult:	1 byte
         # recharge amount:	4 bytes
         # serial no.:	16/32 bytes
-        # customer: 	0/9/10/11/13 bytes, this field is not defined, just mark it as customer
-        # card type:	20 bytes
+        # customer: 	0/9/10/11/13 bytes, this field is not defined, just mark it as customer or unknown
+        # card type:	20 bytes, RRI prefix
         # face value:	4 bytes
 
         Send_Provider_ID_In_External_RCMS = self.var['GP.Send_Provider_ID_In_External_RCMS']
         Send_Service_Provider_In_External_RCMS = self.var['CP.Send_Service_Provider_In_External_RCMS']
         RCMS_32bit_SN = self.var['FF.RCMS_32bit_SN']
-        VAS_Scratch_Card_Feature_Enable_Flag = self.var['FC.VAS_Scratch_Card_Feature_Enable_Flag']
+        VAS_Scratch_Card_Feature = self.var['FC.VAS_Scratch_Card_Feature_Enable_Flag']
         Send_Combined_PIN_And_RCN_For_Val = self.var['FC.Send_Combined_PIN_And_RCN_For_Val']
         Two_Stage_Validation_For_Scratch_Card = self.var['FC.Two_Stage_Validation_For_Scratch_Card']
         
         # if prefix is card reservation, validation result is 9, else default value(0)
         AethosOpPrefix = data[0 : 3]
         val_result = self.resp_var['validationResult'] if AethosOpPrefix != "00350F".decode('hex') else self.validate_result_code['afr_card_already_reserved_by_the_user']
+        
+        # is recharge or reservation(cancel reservation)
+        is_rchg = not (AethosOpPrefix == "00350F".decode('hex') or AethosOpPrefix == "002A11".decode('hex'))
 
         amount = self.resp_var['amount']
         serial_no = self.resp_var['serial_no_32'] if RCMS_32bit_SN else self.resp_var['serial_no_16']
@@ -240,7 +245,7 @@ class RMSHandler(BaseRequestHandler):
         #    ||(Feature_Configuration_tbl[1].Two_Stage_Validation_For_Scratch_Card
         #       && RMS_Two_Stage_Current_Step ==  Send_Card_Reservation)
         #    || Feature_Configuration_tbl[1].Send_Combined_PIN_And_RCN_For_Val
-        if Send_Combined_PIN_And_RCN_For_Val or Send_Provider_ID_In_External_RCMS or Send_Service_Provider_In_External_RCMS:
+        if Send_Combined_PIN_And_RCN_For_Val or Send_Provider_ID_In_External_RCMS or Send_Service_Provider_In_External_RCMS or (Two_Stage_Validation_For_Scratch_Card and (not is_rchg)):
             resp_suffix = resp_suffix + serial_no
 
         # correspond to Surepay code:
@@ -248,17 +253,22 @@ class RMSHandler(BaseRequestHandler):
         #    || (Feature_Configuration_tbl[1].Two_Stage_Validation_For_Scratch_Card
         #        && RMS_Two_Stage_Current_Step ==  Send_Card_Reservation)
         len_unknown = len(customer)
-        if Send_Combined_PIN_And_RCN_For_Val:
-            len_unknown = 11 # BSNL uses this
+        if Send_Combined_PIN_And_RCN_For_Val or (Two_Stage_Validation_For_Scratch_Card and (not is_rchg)):
+            len_unknown = 11 # BSNL uses 11
         elif VAS_Scratch_Card_Feature:
             if Send_Provider_ID_In_External_RCMS:
                 len_unknown = 13
             elif Send_Service_Provider_In_External_RCMS:
                 len_unknown = 10
             else:
-                len_unknown = 9 # GOM uses this
-
+                len_unknown = 9 # GOM uses this, as 9, CAMGSM rchg uses 9, reserv uses 11
         resp_suffix = resp_suffix + customer + '\000' * (len_unknown - len(customer)) + card_type + face_value_s
+
+        # in epay code, max len is 75 or 59, but here we haven't added AethosPrefixResponse(3 bytes)
+        max_len = 72 if RCMS_32bit_SN else 56
+        if len(resp_suffix) < max_len:
+            resp_suffix = resp_suffix + '\000' * (max_len - len(resp_suffix))
+
         return resp_suffix
 
 class TCPServerHandler(StreamRequestHandler):

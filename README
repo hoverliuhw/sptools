@@ -227,6 +227,11 @@
 #       lightweight dump spa data tool
 #       usage: dump <spaname> | all
 #
+# * bkdb
+#       script to backup rtdb data to current directory
+#       usage: bkdb <dbname> [partial key]
+#       note: this is a new bkdb, which is different from the one for Wang Yiping
+#
 # * setuptools.sh
 #	used for copy and link all above scripts
 #	usage: cp this script to mcas, modify its base dir, then run it

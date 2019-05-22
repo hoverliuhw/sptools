@@ -1,0 +1,34 @@
+#!/bin/sh
+# used to backup db
+
+if [ $# -eq 0 ]
+then
+    echo "usage: bkdb <dbname> [partialkey]"
+    exit 1
+fi
+dbname=$1
+pkey=$2
+
+isInstalled=$(psql -Uscncraft -At -c "select db_name from rtdb_app where db_name='$dbname'")
+if [ -z "$isInstalled" ]
+then
+    echo "$dbname is not installed"
+    exit 1
+fi
+
+dbtype=$(psql -Uscncraft -At -c "select db_type from rtdb_parm")
+echo "DB type is $dbtype"
+if [ "$dbtype" = "AEROSPIKE" ]
+then
+    db-query -s $dbname -v all -m all -f compact -o $PWD/$dbname.data
+else
+    if [ -z "$pkey" ]
+    then
+        /sn/cr/cepexec BACKUP_DB "backup:db=$dbname,dest=\"$PWD/$dbname.data\""
+    else
+        echo "with partial key $pkey"
+        /sn/cr/cepexec BACKUP_DB "backup:db=$dbname,dest=\"$PWD/$dbname.data\",partialkey=\"$pkey\""
+    fi
+fi
+
+echo "Output written to file: $PWD/$dbname.data"
