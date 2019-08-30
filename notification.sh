@@ -17,6 +17,9 @@ version=$(echo $enwtpps | sed "s/ENWTPPS//g")
 epay=EPAY$version
 eppsa=EPPSA$version
 
+smpp_port=4444
+tcp_port=6666
+
 # replace hostname in sql files
 # config diameter related
 

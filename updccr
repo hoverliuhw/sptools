@@ -15,6 +15,12 @@
 #     msg.CCR_Dcca_Vendor_Specific_Avps_Bound.rfro_sgsn_address
 #     CCR_Subscription_Id_Tbl.Sub_Value
 
+cus=$1
+if [ $# -eq 0 ]
+then
+    cus=vfi
+fi
+
 session_id="SI;12345678;12340001"
 ccri=11
 ccru=12
@@ -35,14 +41,35 @@ para_vfcz=(420773289510 "217077165000" "gprst.4sacc3")
 
 # 3gpp customer
 # msisdn sgsn station_id service_context_id
-para_gom=(35679376006 "087.252.158.000" "v-gointernet-local" "v1.ggsn.6.32251@3gpp.org") # need extra config for zone info, such as mnc mcc
-para_camgsm=(85511334449 "203.144.090.081" "ccbmate" "6.32251@3gpp.org")
-para_togo=(22893990070 "197.148.125.002" "pcrf.togocel" "32251@3gpp.org")
 para_bsnl=(919440196168 "218.248.72.40" "bsnlnet" "32251@3gpp.org") # take south zone as example
+para_camgsm=(85511334449 "203.144.090.081" "ccbmate" "6.32251@3gpp.org")
+
+# for GOM, need extra config for zone info, such as mnc mcc
+#  CCR_Dcca_Vendor_Specific_Avps_Bound.sgsn_mcc_mnc
+para_gom=(35679376006 "087.252.158.000" "v-gointernet-local" "v1.ggsn.6.32251@3gpp.org")
+para_togo=(22893990070 "197.148.125.002" "pcrf.togocel" "32251@3gpp.org")
+para_tot=(668932060080 "119.031.127.124" "internet.tot" "6.32251@3gpp.org")
 
 # please specify customer in variable "para"
-bound="vf" # vf or 3gpp
-para=(${para_vfi[@]})
+#bound="vf" # vf or 3gpp
+#para=(${para_vfi[@]})
+eval "para=(\${para_$cus[@]})"
+
+if [ -z "$para" ]
+then
+    echo "please specify customer:"
+    echo "    vf   customer: vfi vfuk vfgr vfie vfq vfnz vfgh vfp vfhu vfcz"
+    echo "    3gpp customer: gom camgsm togo bsnl tot"
+    exit 1
+fi
+
+bound="vf" # default bound is vf
+if [[ $cus =~ ^vf ]]
+then
+    bound="vf"
+else
+    bound="3gpp"
+fi
 
 msisdn=${para[0]}
 sgsn=${para[1]}

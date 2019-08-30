@@ -1,0 +1,65 @@
+#!/bin/sh
+
+# This script is to check some field's value in SPA
+# maybe it will support RTDB check in the future
+# Liu Hongwei
+# 2019.07.31
+
+#fn="Traffic_Typology_ID" # composite keys
+#fn="Default_IMSI_Numb_Plan" # no key
+#fn="Class_Of_Service_Code" # single key
+if [ $# = 0 ]
+then
+    echo "usage: ckv <field name> or ckv <-ff|-pm> <key name>"
+    exit 1
+fi
+fn=$1
+
+if [ $1 = "-ff" -o $1 = "-pm" ]
+then
+    if [ $# -lt 2 ]
+    then
+        echo "please specify key of FF/PM table"
+        exit 1
+    fi
+    tblrc=""
+    if [ $1 = "-ff" ]
+    then
+        tblrc="public rc table Flexible_Feature_tbl"
+    else
+        tblrc="public rc table Parameter_Mapping_tbl"        
+    fi
+    key=$2
+    tbl=$(psql -Uscncraft -At -c "select item from rcmenutbl where title='$tblrc'")
+    echo "*> $tblrc: $tbl"
+    psql -Uscncraft -c "select * from $tbl where indx='$key'"    
+
+    exit 0
+fi
+
+for line in $(grep "\"$fn\"" /sn/sps/*/*.ti | sed "s/ /:/g")
+do
+    if [ -z "$line" ]
+    then
+        continue
+    fi
+    sn=$(echo $line | awk -F: '{print $4}')
+    tbl=$(echo $line| awk -F: '{print $1}' |sed "s/.ti//g" | xargs basename)
+    tblrc=$(psql -Uscncraft -At -c "select title from rcmenutbl where item='$tbl'")
+    echo "*> $tblrc: $tbl"
+
+    # get key
+    i=0
+    keys=()
+    for key in $(egrep " key | key;" /sn/sps/*/$tbl.ti | awk '{print $2}')
+    do
+        keys[i]=$key
+        i=$(($i + 1))
+    done
+    if [ ${#keys[@]} -gt 0 ]
+    then
+        keystr="$(echo ${keys[@]} | sed "s/ /,/g"),"
+    fi
+    psql -Uscncraft -c "select $keystr $sn as $fn from $tbl where not $sn is null" | grep -v "rows)"
+done
+

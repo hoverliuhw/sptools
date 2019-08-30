@@ -1,0 +1,48 @@
+#!/bin/sh
+# this is to get SPA's RMS related configuration, for aethos.py use
+#        'GP.Send_Provider_ID_In_External_RCMS'
+#        'CP.Send_Service_Provider_In_External_RCMS'
+#        'FF.RCMS_32bit_SN': False, # BSNL is True, GOM, CAMGSM is False
+#        'FC.VAS_Scratch_Card_Feature_Enable_Flag' # GOM, CAMGSM is True
+#        'FC.Send_Combined_PIN_And_RCN_For_Val'  # BSNL is True, GOM, CAMGSM is False
+#        'FC.Two_Stage_Validation_For_Scratch_Card'
+
+enwtpps=$(psql -Uscncraft -At -c "select version_name from sa_name_map where spa_base='ENWTPPS'")
+epay=$(echo $enwtpps | sed "s/ENWTPPS/EPAY/g")
+hostname=$(hostname | sed "s/-0-0-1//g")
+
+# GP.Send_Provider_ID_In_External_RCMS
+GP=$(psql -Uscncraft -At -c "select item from rcmenutbl where title='client global rc' and parent='$epay'")
+sqlname=$(grep Send_Provider_ID_In_External_RCMS /sn/sps/$epay/$epay.sym | awk -F\; '{print $3}')
+Send_Provider_ID_In_External_RCMS=$(psql -Uscncraft -At -c "select $sqlname from $GP")
+echo "GP.Send_Provider_ID_In_External_RCMS=$Send_Provider_ID_In_External_RCMS"
+
+# CP.Send_Service_Provider_In_External_RCMS
+CP=$(psql -Uscncraft -At -c "select item from rcmenutbl where title='public rc table Common_Parameters_tbl' and parent='$enwtpps'")
+sqlname=$(grep Send_Service_Provider_In_External_RCMS /sn/sps/$enwtpps/$enwtpps.sym | awk -F\; '{print $3}')
+Send_Service_Provider_In_External_RCMS=$(psql -Uscncraft -At -c "select $sqlname from $CP where indx='$hostname'")
+echo "CP.Send_Service_Provider_In_External_RCMS=$Send_Service_Provider_In_External_RCMS"
+
+# FF.RCMS_32bit_SN
+FF=$(psql -Uscncraft -At -c "select item from rcmenutbl where title='public rc table Flexible_Feature_tbl' and parent='$enwtpps'")
+RCMS_32bit_SN=$(psql -Uscncraft -At -c "select * from $FF where indx='RCMS_32bit_SN'")
+if [ -z "$RCMS_32bit_SN" ]
+then
+    RCMS_32bit_SN=N
+else
+    RCMS_32bit_SN=Y
+fi
+echo "FF.RCMS_32bit_SN=$RCMS_32bit_SN"
+
+# FC table
+FC=$(psql -Uscncraft -At -c "select item from rcmenutbl where title='public rc table Feature_Configuration_tbl' and parent='$enwtpps'")
+sqlname=$(grep VAS_Scratch_Card_Feature_Enable_Flag /sn/sps/$enwtpps/$enwtpps.sym | awk -F\; '{print $3}')
+VAS_Scratch_Card_Feature_Enable_Flag=$(psql -Uscncraft -At -c "select $sqlname from $FC limit 1")
+sqlname=$(grep Send_Combined_PIN_And_RCN_For_Val /sn/sps/$enwtpps/$enwtpps.sym | awk -F\; '{print $3}')
+Send_Combined_PIN_And_RCN_For_Val=$(psql -Uscncraft -At -c "select $sqlname from $FC limit 1")
+sqlname=$(grep Two_Stage_Validation_For_Scratch_Card /sn/sps/$enwtpps/$enwtpps.sym | awk -F\; '{print $3}')
+Two_Stage_Validation_For_Scratch_Card=$(psql -Uscncraft -At -c "select $sqlname from $FC limit 1")
+
+echo "FC.VAS_Scratch_Card_Feature_Enable_Flag=$VAS_Scratch_Card_Feature_Enable_Flag"
+echo "FC.Send_Combined_PIN_And_RCN_For_Val=$Send_Combined_PIN_And_RCN_For_Val"
+echo "FC.Two_Stage_Validation_For_Scratch_Card=$Two_Stage_Validation_For_Scratch_Card"

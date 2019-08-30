@@ -36,13 +36,29 @@ then
 	exit 1
 fi
 
-CMD="LOAD:DB=$DBNAME,FILE=$DBFILE,UCL"
-eval $CEPEXEC LOAD_DB \'LOAD:DB=$DBNAME,FILE=\"$DBFILE\",UCL\'
-if [ $? = 0 ]
+dbtype=$(psql -Uscncraft -At -c "select db_type from rtdb_parm")
+echo "DB type is $dbtype"
+if [ "$dbtype" = "AEROSPIKE" ]
 then
-	echo "load $DBNAME success"
+    /usr/bin/expect -c "
+        set timeout 600
+        spawn db-load -t compact -s $DBNAME -f $DBFILE -o /tmp/errorfile -p high
+        expect {
+            "*y/n*" {
+                    send \"y\n\"
+                    exp_continue
+            }
+        }
+    "
 else
+    CMD="LOAD:DB=$DBNAME,FILE=$DBFILE,UCL"
+    eval $CEPEXEC LOAD_DB \'LOAD:DB=$DBNAME,FILE=\"$DBFILE\",UCL\'
+    if [ $? = 0 ]
+    then
+	echo "load $DBNAME success"
+    else
 	echo "load $DBNAME fail"
+    fi
+    #$CEPEXEC LOAD_DB $CMD
 fi
-#$CEPEXEC LOAD_DB $CMD
 
