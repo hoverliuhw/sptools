@@ -60,6 +60,9 @@ do
     then
         keystr="$(echo ${keys[@]} | sed "s/ /,/g"),"
     fi
-    psql -Uscncraft -c "select $keystr $sn as $fn from $tbl where not $sn is null" | grep -v "rows)"
+#    psql -Uscncraft -c "select $keystr $sn as $fn from $tbl where not $sn is null" | grep -v "rows)"
+    fn_lower=$(echo $fn | tr "[A-Z]" "[a-z]")
+    psql -Uscncraft -c "select $keystr $sn as $fn from $tbl where not $sn is null" | grep -v "rows)" |sed "s/$fn_lower/$fn/g"
+
 done
 

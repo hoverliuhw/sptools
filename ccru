@@ -17,7 +17,7 @@
 #         hong_wei.hl.liu@alcatel-lucent.com
 ###########################################################
 
-CCR_INDEX=UK02
+CCR_INDEX=12
 CC_NUM_COUNTER="/tmp/PS_CC_NUM_COUNTER"
 CC_NUM_FRM="/tmp/ps_cc_num.frm"
 BASEFRM="/u/ainet/hongwehl/bin/ps.frm"

@@ -22,9 +22,42 @@ then
 fi
 
 session_id="SI;12345678;12340001"
-ccri=11
-ccru=12
-ccrt=13
+
+# set CCR index according to current data
+# 11, 12, 14
+ccr_index_vfal=(11 12 14)
+ccr_index_camgsm=(11 12 14)
+ccr_index_vfcz=(11 12 14)
+ccr_index_vfgr=(11 12 14)
+ccr_index_vfhu=(11 12 14)
+ccr_index_vfie=(11 12 14)
+ccr_index_vfi=(11 12 14)
+ccr_index_vfnl=(11 12 14)
+ccr_index_togo=(11 12 14)
+
+# 11, 12, 13
+ccr_index_vfgh=(11 12 13)
+ccr_index_gom=(11 12 13)
+ccr_index_tot=(11 12 13)
+
+# others
+ccr_index_vfq=(11 22 33)
+ccr_index_vfp=(396 3961 3962)
+ccr_index_vfuk=(385 3851 3852)
+
+# these are not defined or checked yet, use 11 12 14
+ccr_index_bsnl=(11 12 14)
+ccr_index_mtnl=(11 12 14)
+ccr_index_m1=(11 12 14)
+ccr_index_apt=(11 12 14)
+
+eval "ccr_index=(\${ccr_index_$cus[@]})"
+ccri=${ccr_index[0]}
+ccru=${ccr_index[1]}
+ccrt=${ccr_index[2]}
+#ccri=11
+#ccru=12
+#ccrt=13
 
 # vf customer
 # msisdn sgsn station_id

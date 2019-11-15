@@ -130,13 +130,27 @@ logCollect()
 
     sed -i "s/>>>/>/g" $LOGNAME
     echo "*************** Uploading Log ***************"
-    ftp -in $HOST <<!
-user $LOGIN $PASSWD
-bin
-cd $LOGDIR
-put $LOGNAME
-bye
-!
+#    ftp -in $HOST <<!
+#user $LOGIN $PASSWD
+#bin
+#cd $LOGDIR
+#put $LOGNAME
+#bye
+#!
+    /usr/bin/expect <<!EOF
+set timeout 600
+spawn scp debuglog $LOGIN@$HOST:$LOGDIR
+expect {
+    "*yes/no\)*" {
+        send "yes\n"
+        exp_continue
+    }
+    "*assword:" {
+        send "$PASSWD\n"
+        exp_continue
+    }
+}
+!EOF
 
     isSubscriptAt=`grep "subscript at" $LOGNAME`
     if [ ! -z "$isSubscriptAt" ]
