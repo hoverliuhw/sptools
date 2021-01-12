@@ -12,10 +12,10 @@
 # Hong_Wei.hl.Liu@alcatel-lucent.com
 ################################################################
 
-#Information about your workstation
-
+# Information about your workstation
 CONF="/u/ainet/hongwehl/bin/CONFIGURE"
 
+# Load necessary parameters from CONFIGURE file
 for VAR in `cat $CONF | egrep -v "^#|^$"`
 do
         eval $VAR

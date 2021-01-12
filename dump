@@ -24,11 +24,13 @@ spaname=$1
 # deal with "all" option
 if [ "$spaname" = "all" ]
 then
+    # when dumping all spa data, call dump in parallel
     for spa in $(psql -Uscncraft -At -c "select span from spa_tbl")
     do
         $DUMP $spa &
     done
 
+    # check whether all of dump task finished, in every 5 seconds
     while [ ! -z "$(ps -ef | grep "$DUMP" | egrep -v 'grep|all')" ]
     do
         sleep 5
@@ -47,6 +49,9 @@ then
 fi
 
 # deal with single spa table by table in sequential
+# it is not recommended to dump in parallel,
+# that means too many psql processes at the same time, 
+# system will get error
 >$spaname.sql
 for tbl in $(psql -Uscncraft -At -c "select item from RCMENUTBL where parent='$spaname'")
 do

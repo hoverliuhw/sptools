@@ -6,13 +6,17 @@
 #       SMPP_PRTCL_FSM - EPAY/EPPSA
 #       TI_CONFIG - Platform 9.1
 #       TI_EXIT - platform 9.2, 4444 for SMPP, 6666 for TCP
-#       add $servername(notification server) IP in /etc/hosts, default server is SPVM43 135.242.106.65
+#       add $servername(notification server) IP in /etc/hosts, default server is SPVM43 135.242.107.130
+#    2) note for SCC configuration:
+#       SPA ID = <SPA NAME>:<CLIENT ID>_<HOST ID>
+#       e.g: EPAY:S*_4, means special clients on host 4(0-0-10)
+#            EPAY:1_7, means client 1 on host 7 (0-0-4)
 
 dest_sql="notification.sql"
-hostname=`hostname | sed "s/-0-0-1//g"`
+hostname=$(hostname | awk -F- '{print $1}')
 servername="NOTIHOST"
-serverip="135.242.106.65"
-enwtpps=`psql -Uscncraft -At -c "select version_name from sa_name_map where spa_base='ENWTPPS'"`
+serverip="135.242.107.130"
+enwtpps=$(psql -Uscncraft -At -c "select version_name from sa_name_map where spa_base='ENWTPPS'")
 version=$(echo $enwtpps | sed "s/ENWTPPS//g")
 epay=EPAY$version
 eppsa=EPPSA$version
@@ -32,7 +36,7 @@ sqlsmppfsmepay=`psql -Uscncraft -At -c "select item from rcmenutbl where title='
 sqlsmppfsmeppsa=`psql -Uscncraft -At -c "select item from rcmenutbl where title='$rcsmppfsm' and parent='$eppsa'"`
 
 singlequote="'"
-updsmppfsmepay=`gawk -v smppfsm=$sqlsmppfsmepay -v quote=$singlequote -v servername=$servername '
+updsmppfsmepay=`gawk -v smppfsm=$sqlsmppfsmepay -v quote=$singlequote -v servername=$servername -v smppport=$smpp_port '
 BEGIN{
     RS = "";
     FS = "\n";
@@ -42,12 +46,12 @@ $1 ~/client fsm SMPP_PRTCL_FSM/{
     server = attr[3];
     split($7, attr, ";");
     port = attr[3];
-    printf("UPDATE %s SET %s=%s%s%s, %s=%s4444%s", smppfsm, server, quote, servername, quote, port, quote, quote);
+    printf("UPDATE %s SET %s=%s%s%s, %s=%s%s%s", smppfsm, server, quote, servername, quote, port, quote, smppport, quote);
 }' /sn/sps/$epay/$epay.sym`
 
 if [ -d /sn/sps/$eppsa ]
 then
-    updsmppfsmeppsa=`gawk -v smppfsm=$sqlsmppfsmeppsa -v quote=$singlequote -v servername=$servername '
+    updsmppfsmeppsa=`gawk -v smppfsm=$sqlsmppfsmeppsa -v quote=$singlequote -v servername=$servername -v smppport=$smpp_port '
     BEGIN{
         RS = "";
         FS = "\n";
@@ -57,13 +61,13 @@ then
         server = attr[3];
         split($7, attr, ";");
         port = attr[3];
-        printf("UPDATE %s SET %s=%s%s%s, %s=%s4444%s", smppfsm, server, quote, servername, quote, port, quote, quote);
+        printf("UPDATE %s SET %s=%s%s%s, %s=%s%s%s", smppfsm, server, quote, servername, quote, port, quote, smppport, quote);
     }' /sn/sps/$eppsa/$eppsa.sym`
 fi
 
 ti_config="INSERT INTO TI_CONFIG(host_name, poll_interval, data_limit,reads_per_interval,window_size,read_size,write_size,diff_serv,window_size_kb) VALUES ('$servername', '1', '9999999', '32', '1', '0', '0', 0, '0')"
-ti_exit_tcp="INSERT INTO TI_EXIT(host_name, port_number, treatment, security_type, cipher_suite,node_id) VALUES ('$servername', '6666', 'NONE', 'NONE', 'NONE', '0')"
-ti_exit_smpp="INSERT INTO TI_EXIT(host_name, port_number, treatment, security_type, cipher_suite,node_id) VALUES ('$servername', '4444', 'NONE', 'NONE', 'NONE', '0')"
+ti_exit_tcp="INSERT INTO TI_EXIT(host_name, port_number, treatment, security_type, cipher_suite,node_id) VALUES ('$servername', '$tcp_port', 'NONE', 'NONE', 'NONE', '0')"
+ti_exit_smpp="INSERT INTO TI_EXIT(host_name, port_number, treatment, security_type, cipher_suite,node_id) VALUES ('$servername', '$smpp_port', 'NONE', 'NONE', 'NONE', '0')"
 
 is_exist=""
 is_exist=$(psql -Uscncraft -At -c "select * from ti_config where host_name='$servername'")
@@ -71,12 +75,12 @@ if [ ! -z "$is_exist" ]
 then
     ti_config=""
 fi
-is_exist=$(psql -Uscncraft -At -c "select * from ti_exit where host_name='$servername' and port_number='6666'")
+is_exist=$(psql -Uscncraft -At -c "select * from ti_exit where host_name='$servername' and port_number='$tcp_port'")
 if [ ! -z "$is_exist" ]
 then
     ti_exit_tcp=""
 fi
-is_exist=$(psql -Uscncraft -At -c "select * from ti_exit where host_name='$servername' and port_number='4444'")
+is_exist=$(psql -Uscncraft -At -c "select * from ti_exit where host_name='$servername' and port_number='$smpp_port'")
 if [ ! -z "$is_exist" ]
 then
     ti_exit_smpp=""
@@ -116,15 +120,15 @@ else
     echo "\"$is_exist\" has been already in /etc/hosts"
 fi
 cat <<!eof >scc.frm
-FORM=$sqlscc&NEW,index.Port_Number="4444",index.SCP_Name="$hostname",index.SPA_ID="EPAY:N*",index.Server_Name="EPAY:S*",index.Service_Name="SMPPConnection",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="1",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
-FORM=$sqlscc&NEW,index.Port_Number="4444",index.SCP_Name="$hostname",index.SPA_ID="EPAY:S*",index.Server_Name="$servername",index.Service_Name="SMPPConnection",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="1",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
-FORM=$sqlscc&NEW,index.Port_Number="6666",index.SCP_Name="$hostname",index.SPA_ID="EPAY:S*",index.Server_Name="$servername",index.Service_Name="UCNotification",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="2",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
-FORM=$sqlscc&NEW,index.Port_Number="6666",index.SCP_Name="$hostname",index.SPA_ID="EPAY:N*",index.Server_Name="EPAY:S*",index.Service_Name="UCConnection",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="2",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
-FORM=$sqlscc&NEW,index.Port_Number="4444",index.SCP_Name="$hostname",index.SPA_ID="EPPSA:N*",index.Server_Name="EPPSA:S*",index.Service_Name="SMPPConnection",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="1",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
-FORM=$sqlscc&NEW,index.Port_Number="4444",index.SCP_Name="$hostname",index.SPA_ID="EPPSA:S*",index.Server_Name="$servername",index.Service_Name="SMPPConnection",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="1",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
-FORM=$sqlscc&NEW,index.Port_Number="6666",index.SCP_Name="$hostname",index.SPA_ID="EPPSA:S*",index.Server_Name="$servername",index.Service_Name="UCNotification",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="2",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
-FORM=$sqlscc&NEW,index.Port_Number="6666",index.SCP_Name="$hostname",index.SPA_ID="EPPSA:N*",index.Server_Name="EPPSA:S*",index.Service_Name="UCConnection",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="2",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
+FORM=$sqlscc&NEW,index.Port_Number="$smpp_port",index.SCP_Name="$hostname",index.SPA_ID="EPAY:N*",index.Server_Name="EPAY:S*",index.Service_Name="SMPPConnection",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="1",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
+FORM=$sqlscc&NEW,index.Port_Number="$smpp_port",index.SCP_Name="$hostname",index.SPA_ID="EPAY:S*",index.Server_Name="$servername",index.Service_Name="SMPPConnection",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="1",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
+FORM=$sqlscc&NEW,index.Port_Number="$tcp_port",index.SCP_Name="$hostname",index.SPA_ID="EPAY:S*",index.Server_Name="$servername",index.Service_Name="UCNotification",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="1",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
+FORM=$sqlscc&NEW,index.Port_Number="$tcp_port",index.SCP_Name="$hostname",index.SPA_ID="EPAY:N*",index.Server_Name="EPAY:S*",index.Service_Name="UCConnection",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="1",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
+FORM=$sqlscc&NEW,index.Port_Number="$smpp_port",index.SCP_Name="$hostname",index.SPA_ID="EPPSA:N*",index.Server_Name="EPPSA:S*",index.Service_Name="SMPPConnection",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="1",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
+FORM=$sqlscc&NEW,index.Port_Number="$smpp_port",index.SCP_Name="$hostname",index.SPA_ID="EPPSA:S*",index.Server_Name="$servername",index.Service_Name="SMPPConnection",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="1",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
+FORM=$sqlscc&NEW,index.Port_Number="$tcp_port",index.SCP_Name="$hostname",index.SPA_ID="EPPSA:S*",index.Server_Name="$servername",index.Service_Name="UCNotification",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="1",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
+FORM=$sqlscc&NEW,index.Port_Number="$tcp_port",index.SCP_Name="$hostname",index.SPA_ID="EPPSA:N*",index.Server_Name="EPPSA:S*",index.Service_Name="UCConnection",Backlog_Size="1000",Block_Duration="100",Number_Of_Connection="1",Number_Of_Retry="1",Priority="Priority_Primary",Protocol="PRT_TCPIP",Retry_Interval="10",Timeout="4",NEW!
 !eof
 
 chmod 755 $dest_sql
-echo "please execute ./$dest_sql, and then ldfrm scc.frm"
+echo "please execute ./$dest_sql to update platform, and then ldfrm scc.frm to configure scc table"

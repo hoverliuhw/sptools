@@ -12,8 +12,15 @@ then
     for spa in $(psql -Uscncraft -At -c "select span from spm_tbl");do mutemeas $spa;done
     exit 0
 fi
-isIS=`psql -Uscncraft -At -c "select span from spm_tbl where span='$spaname'"`
 
+isDist=$(psql -Uscncraft -At -c "select span from sa_node where node_id='3' and span='$spaname'")
+if [ -z "$isDist" ]
+then
+    echo "$spaname is not distributed spa"
+    exit 0
+fi
+
+isIS=`psql -Uscncraft -At -c "select span from spm_tbl where span='$spaname'"`
 if [ -z "$isIS" ]
 then
     echo "$spaname is not in IS"

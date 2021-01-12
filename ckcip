@@ -11,12 +11,20 @@ then
 fi
 
 cat <<!eof >$tempbpfile
-print(Glb_FG_UBD_Bucket_Info_tbl[])
-print(Glb_Group_Timer_Instance_Mapping_tbl[])
-print(LDAP_Calls_In_Progress_tbl[])
-print(Calls_In_Progress_Counters_tbl[])
-print(Extend_CIPC_tbl[])
 print(Bundle_PTP_CIP_tbl[])
+print(Calls_In_Progress_Counters_tbl[])
+print(Calls_In_Progress_tbl[])
+print(ECIP_Renewed_Bundle_tbl[])
+print(Enhance_Q_Bundle_Info_tbl[])
+print(Extend_CIPC_tbl[])
+print(Glb_BOU_Cached_Bundle[])
+print(Glb_Diameter_Session_DB_tbl[])
+print(Glb_FG_UBD_Bucket_Info_tbl[])
+print(Glb_Group_AOD_For_Counter_tbl[])
+print(Glb_Group_AOD_Timer_tbl[])
+print(Glb_Group_Timer_Instance_Mapping_tbl[])
+print(Glb_Prom_PLI_Tbl[])
+print(LDAP_Calls_In_Progress_tbl[])
 print(Sync_In_Progress_tbl[])
 detach
 !eof

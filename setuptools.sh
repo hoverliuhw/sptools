@@ -22,10 +22,10 @@
 #################################################
 
 # remote host information, no need update
-remoteip="135.242.106.65"
-remoteuser=hongwehl
-remotepasswd=hongwehl
-remotedir="/home/hongwehl/spvm53/bin"
+remoteip="135.242.107.130"
+remoteuser=hongweil
+remotepasswd=123456
+remotedir="/home/hongweil/spvm43/spvm53/bin"
 
 # local host(working mCAS) information, update per user's need
 rootpasswd="r00t"
@@ -40,7 +40,7 @@ tempbindir="$tempbasedir/bin"
 configfile="$bindir/CONFIGURE"
 
 # copy tools
-toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb pldb getdb.py ldfrm audit aiaudit syaudit ccri ccru ccrt ngini nginu ngint ccre createdb stopall.sh keygen ckcip clcip openrc closerc clrc genfrm refrc ckcus genbp genAuditBP updsql ckop mutemeas tl stbl chsub usu dump bkdb ckrms ckv"
+toollist="LogCMB teel teela eteela dama damaf edamaf rstama trbp rstspa rstdb ldb pldb getdb.py ldfrm audit aiaudit syaudit ccri ccru ccrt ngini nginu ngint ccre createdb stopall keygen ckcip clcip openrc closerc clrc genfrm refrc ckcus genbp genAuditBP updsql ckop mutemeas tl stbl chsub usu dump bkdb ckrms ckv"
 
 if [ ! -d $basedir ]
 then
@@ -65,7 +65,7 @@ fi
 
 echo "copying scripts from remote server ..."
 /usr/bin/expect -c "
-	set timeout 600
+	set timeout 1800
 	spawn scp -r $remoteuser@$remoteip:$remotedir $basedir
 	expect {
 		"*yes/no\)*" {

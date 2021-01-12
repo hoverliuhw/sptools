@@ -14,6 +14,21 @@
 #     msg.CCR_Dcca_Vendor_Specific_Avps_Bound.rfro_sgsn_address_version="iave_ip_v4"
 #     msg.CCR_Dcca_Vendor_Specific_Avps_Bound.rfro_sgsn_address
 #     CCR_Subscription_Id_Tbl.Sub_Value
+# for GOM, TOGOCEL, TOT, STC
+# need extra config for zone info, take stc as example, not everyone needed:
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.present_sgsn_mcc_mnc="true"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.sgsn_mcc_mnc="42001"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.ggsn_mcc_mnc="42050"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.imsi_mcc_mnc="42050"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.geographic_location_type="d3glte_tai_ecgi"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.cgi_sai_mcc="420"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.cgi_sai_mnc="01"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.cgi_sai_lac=""
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.ci_or_sac=""
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.tai_tac="062c"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.ecgi_eci="4dc9f04"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.additional_mcc="420"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.additional_mnc="01"
 
 cus=$1
 if [ $# -eq 0 ]
@@ -33,16 +48,18 @@ ccr_index_vfhu=(11 12 14)
 ccr_index_vfie=(11 12 14)
 ccr_index_vfi=(11 12 14)
 ccr_index_vfnl=(11 12 14)
+ccr_index_vfp=(11 12 14)
 ccr_index_togo=(11 12 14)
 
 # 11, 12, 13
 ccr_index_vfgh=(11 12 13)
 ccr_index_gom=(11 12 13)
 ccr_index_tot=(11 12 13)
+ccr_index_stc=(11 12 13)
 
 # others
 ccr_index_vfq=(11 22 33)
-ccr_index_vfp=(396 3961 3962)
+# ccr_index_vfp=(396 3961 3962)
 ccr_index_vfuk=(385 3851 3852)
 
 # these are not defined or checked yet, use 11 12 14
@@ -60,7 +77,7 @@ ccrt=${ccr_index[2]}
 #ccrt=13
 
 # vf customer
-# msisdn sgsn station_id
+#          msisdn        sgsn           station_id
 para_vfi=(393470999107 "010130037004" "lte.vodafone.it")
 para_vfuk=(447469979955 "212183144242" "pp.vodafone.co.uk")
 para_vfgr=(306944900340 "213249062000" "internet.vodafone.gr")
@@ -68,20 +85,36 @@ para_vfie=(353870999127 "213233130056" "hs.vodafone.ie")
 para_vfq=(97470899843 "194020091224" "web.vodafone.com.qa")
 para_vfnz=(64210591025 "010054008002" "www.vodafone.net.nz")
 para_vfgh=(233202007007 "080087092022" "spbrowse")
-para_vfp=(8610000001234 "213030040018" "corporate.vodafone.pt")
+para_vfp=(351917288053 "213030083067" "national.net2.vodafone.pt")
 para_vfhu=(36702491082 "080244100116" "internet.vodafone.net")
 para_vfcz=(420773289510 "217077165000" "gprst.4sacc3")
 
 # 3gpp customer
-# msisdn sgsn station_id service_context_id
+#           msisdn        sgsn         station_id service_context_id
 para_bsnl=(919440196168 "218.248.72.40" "bsnlnet" "32251@3gpp.org") # take south zone as example
 para_camgsm=(85511334449 "203.144.090.081" "ccbmate" "6.32251@3gpp.org")
 
-# for GOM, need extra config for zone info, such as mnc mcc
-#  CCR_Dcca_Vendor_Specific_Avps_Bound.sgsn_mcc_mnc
+# for GOM, TOGOCEL, TOT, STC
+# need extra config for zone info, take stc as example, not everyone needed:
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.present_sgsn_mcc_mnc="true"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.sgsn_mcc_mnc="42001"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.ggsn_mcc_mnc="42050"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.imsi_mcc_mnc="42050"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.geographic_location_type="d3glte_tai_ecgi"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.cgi_sai_mcc="420"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.cgi_sai_mnc="01"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.cgi_sai_lac=""
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.ci_or_sac=""
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.tai_tac="062c"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.ecgi_eci="4dc9f04"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.additional_mcc="420"
+#    CCR_Dcca_Vendor_Specific_Avps_Bound.additional_mnc="01"
+
+#           msisdn        sgsn         station_id service_context_id
 para_gom=(35679376006 "087.252.158.000" "v-gointernet-local" "v1.ggsn.6.32251@3gpp.org")
 para_togo=(22893990070 "197.148.125.002" "pcrf.togocel" "32251@3gpp.org")
 para_tot=(668932060080 "119.031.127.124" "internet.tot" "6.32251@3gpp.org")
+para_stc=(966515481638 "212.215.134.152" "internet" "8.32251@3gpp.org")
 
 # please specify customer in variable "para"
 #bound="vf" # vf or 3gpp

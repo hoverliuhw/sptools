@@ -1,8 +1,16 @@
 #WS information
-HOST=135.242.106.65
-LOGIN=hongwehl
-PASSWD=hongwehl
-LOGDIR=/l/hongwehl/BSNL/sp28.12/log/
+HOST=135.242.107.130
+SSH_PORT=22
+LOGIN=hongweil
+PASSWD=123456
+LOGDIR=/home/hongweil/l_hongwehl_spvm43/VFUK/sp18.9/log
+
+# For new SDE
+#HOST=135.252.162.137
+#SSH_PORT=30024
+#LOGIN=root
+#PASSWD=123456
+#LOGDIR=/vol/hongwehl/VFQ/sp17.9/log
 
 #mCAS used parameters
 #LOGNAME conflicts with environment variable LOGNAME
@@ -18,3 +26,4 @@ AMAFIELD_FILTER=$AMACONFIG_DIR/ama.fields
 AMADESTDIR=/u/ainet/hongwehl/amafile
 DAMA=/u/ainet/hongwehl/bin/dama
 TEMP_DECODE_FILE=/tmp/temp.decode
+HTTP_PROXY="135.251.33.15:80"

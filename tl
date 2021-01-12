@@ -137,9 +137,13 @@ logCollect()
 #put $LOGNAME
 #bye
 #!
+if [ -z "$SSH_PORT" ]
+then
+    SSH_PORT=22
+fi
     /usr/bin/expect <<!EOF
 set timeout 600
-spawn scp debuglog $LOGIN@$HOST:$LOGDIR
+spawn scp -P $SSH_PORT $LOGNAME $LOGIN@$HOST:$LOGDIR
 expect {
     "*yes/no\)*" {
         send "yes\n"

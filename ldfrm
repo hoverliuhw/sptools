@@ -28,7 +28,7 @@ fi
 echo -e "END;" >> $FRMFILETMP
 /cs/sn/cr/cepexec RCV_TEXT "RCV:TEXT,SPA" <$FRMFILETMP
 
-tracked=`psql -Uscncraft -At -c "select tablename from pg_tables where tablename='rcdata'"`
+#tracked=`psql -Uscncraft -At -c "select tablename from pg_tables where tablename='rcdata'"`
 #if [ ! -z "$tracked" ] && [ ! -z "$isFrmbk" ]
 #if [ ! -z "$tracked" ]
 #then
