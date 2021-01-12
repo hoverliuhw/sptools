@@ -1,6 +1,7 @@
 #NOT track decode ama tools
 #NOT track ama filter files
 *.decode_ama.full.tar
-ama.filter*
+*ama.filter*
 DecodeCDR*.tar
 .*.swp
+*.fields
